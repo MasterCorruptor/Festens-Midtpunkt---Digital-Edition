@@ -34,6 +34,7 @@ button:hover {
 }
 
 #menuScreen,
+#chooseDeckScreen,
 #deckInfoScreen,
 #deckEditorScreen,
 #editDeckScreen,
@@ -95,5 +96,12 @@ button:disabled {
     background-color: #555555;
     color: #aaaaaa;
     cursor: not-allowed;
+}
+
+#deckButtonList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
 }
 

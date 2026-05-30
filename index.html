@@ -9,27 +9,39 @@
 </head>
 <body>
 
-    <div id="menuScreen">
-		<h1>Festens midtpunkt</h1>
-		<h2>Velg kortstokk</h2>
-		<button id="festButton">Fest</button>
-		<button id="familieButton">Familie</button>
-		<button id="parButton">Par</button>
-	
-		<div id="playerSetup">
-			<h2>Spillere</h2>
+<div id="menuScreen">
+    <h1>Festens midtpunkt</h1>
 
-			<input id="playerNameInput" type="text" placeholder="Skriv spillernavn">
+    <button id="chooseDeckButton">Velg spill</button>
 
-			<button id="addPlayerButton">Legg til spiller</button>
-			<button id="deckEditorButton">Rediger kortstokker</button>
+    <button id="deckEditorButton">Rediger kortstokker</button>
 
-			<ul id="playerList"></ul>
-			<p id="playerError"></p>
-		</div>
-	</div>
+    <div id="playerSetup">
+        <h2>Spillere</h2>
 
-	<div id="deckInfoScreen" style="display: none;">
+        <input id="playerNameInput"
+               type="text"
+               placeholder="Skriv spillernavn">
+
+        <button id="addPlayerButton">Legg til spiller</button>
+
+        <ul id="playerList"></ul>
+
+        <p id="playerError"></p>
+    </div>
+</div>
+
+<div id="chooseDeckScreen" style="display: none;">
+    <h1>Velg spill</h1>
+
+    <div id="deckButtonList"></div>
+
+    <button id="backFromChooseDeckButton">
+        Tilbake til meny
+    </button>
+</div>
+
+<div id="deckInfoScreen" style="display: none;">
     <h1 id="deckTitle"></h1>
 
     <p id="deckDescription"></p>
@@ -42,9 +54,9 @@
 
     <button id="startSelectedDeckButton">Start spill</button>
     <button id="backToMenuButton">Tilbake til meny</button>
-	</div>
+</div>
 	
-	<div id="deckEditorScreen" style="display: none;">
+<div id="deckEditorScreen" style="display: none;">
     <h1>Rediger kortstokker</h1>
 
     <div id="deckEditorList"></div>
@@ -54,9 +66,9 @@
 	
 	<p id="deckEditorMessage"></p>
 	
-	</div>
+</div>
 	
-	<div id="editDeckScreen" style="display: none;">
+<div id="editDeckScreen" style="display: none;">
     <h1>Rediger kortstokk</h1>
 
     <label>Navn</label>
@@ -92,14 +104,14 @@
 	<button id="backToDeckEditorButton">Tilbake</button>
 
 	<p id="saveDeckMessage"></p>
-	</div>
+</div>
 		
-    <div id="gameScreen" style="display: none;">
+<div id="gameScreen" style="display: none;">
         <div id="cardText" class="card">
 		Dette er det første kortet.
 		</div>
         <button id="menuButton">Tilbake til meny</button>
-    </div>
+</div>
 
     <script src="script.js"></script>
 

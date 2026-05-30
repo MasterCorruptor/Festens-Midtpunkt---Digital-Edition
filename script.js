@@ -1,10 +1,6 @@
 const menuScreen = document.getElementById("menuScreen");
 const gameScreen = document.getElementById("gameScreen");
 
-const festButton = document.getElementById("festButton");
-const familieButton = document.getElementById("familieButton");
-const parButton = document.getElementById("parButton");
-
 const menuButton = document.getElementById("menuButton");
 
 const cardText = document.getElementById("cardText");
@@ -36,6 +32,12 @@ const addCardToDeckButton = document.getElementById("addCardToDeckButton");
 const saveDeckButton = document.getElementById("saveDeckButton");
 const saveDeckMessage = document.getElementById("saveDeckMessage");
 
+const chooseDeckButton = document.getElementById("chooseDeckButton");
+const chooseDeckScreen = document.getElementById("chooseDeckScreen");
+
+const backFromChooseDeckButton =
+    document.getElementById("backFromChooseDeckButton");
+
 let players = [];
 let currentDeck = null;
 let currentCardIndex = 0;
@@ -43,29 +45,29 @@ let recentCards = [];
 let selectedDeckId = null;
 let deckBeingEdited = null;
 
-festButton.addEventListener("click", function () {
-    showDeckInfo("fest");
-});
-
-familieButton.addEventListener("click", function () {
-    showDeckInfo("familie");
-});
-
-parButton.addEventListener("click", function () {
-    showDeckInfo("par");
-});
 
 async function showDeckInfo(deckId) {
 
     const deckListResponse = await fetch("data/decks/index.json");
-    const deckList = await deckListResponse.json();
+	const defaultDeckList = await deckListResponse.json();
 
-    const selectedDeck = deckList.find(function (deck) {
-        return deck.id === deckId;
-    });
+	const localDeckList =
+		JSON.parse(localStorage.getItem("localDeckList")) || [];
 
-    const response = await fetch("data/decks/" + selectedDeck.file);
-    const deckData = await response.json();
+	const deckList = defaultDeckList.concat(localDeckList);
+
+	const selectedDeck = deckList.find(function (deck) {
+		return deck.id === deckId;
+	});
+
+    let deckData;
+
+	if (selectedDeck.file === null) {
+		deckData = JSON.parse(localStorage.getItem("deck_" + selectedDeck.id));
+	}
+	else {
+		deckData = await loadDeck(selectedDeck.file);
+	}
 
     selectedDeckId = deckId;
 
@@ -86,7 +88,8 @@ async function showDeckInfo(deckId) {
         "✗ " + players.length + " spillere registrert";
 	}
     menuScreen.style.display = "none";
-    deckInfoScreen.style.display = "flex";
+	chooseDeckScreen.style.display = "none";
+	deckInfoScreen.style.display = "flex";
 	deckError.textContent = "";
 }
 
@@ -105,13 +108,25 @@ async function startDeck(deckId) {
     playerError.textContent = "";
 
     const deckListResponse = await fetch("data/decks/index.json");
-    const deckList = await deckListResponse.json();
+	const defaultDeckList = await deckListResponse.json();
 
-    const selectedDeck = deckList.find(function (deck) {
-        return deck.id === deckId;
-    });
+	const localDeckList =
+		JSON.parse(localStorage.getItem("localDeckList")) || [];
 
-    currentDeck = await loadDeck(selectedDeck.file);
+	const deckList = defaultDeckList.concat(localDeckList);
+
+	const selectedDeck = deckList.find(function (deck) {
+		return deck.id === deckId;
+	});
+
+	if (selectedDeck.file === null) {
+		currentDeck = JSON.parse(
+			localStorage.getItem("deck_" + selectedDeck.id)
+		);
+	}
+	else {
+		currentDeck = await loadDeck(selectedDeck.file);
+	}
 	
 	console.log("Spillere:", players.length);
 	console.log("Min:", currentDeck.minPlayers);
@@ -582,5 +597,40 @@ function createDeckId(name) {
         .replaceAll("å", "a")
         .replace(/[^a-z0-9]+/g, "_")
         .replace(/^_+|_+$/g, "");
+}
+
+chooseDeckButton.addEventListener("click", function () {
+    menuScreen.style.display = "none";
+    chooseDeckScreen.style.display = "flex";
+
+    showChooseDeckList();
+});
+
+backFromChooseDeckButton.addEventListener("click", function () {
+    chooseDeckScreen.style.display = "none";
+    menuScreen.style.display = "flex";
+});
+
+async function showChooseDeckList() {
+    deckButtonList.innerHTML = "";
+
+    const deckListResponse = await fetch("data/decks/index.json");
+    const defaultDeckList = await deckListResponse.json();
+
+    const localDeckList =
+        JSON.parse(localStorage.getItem("localDeckList")) || [];
+
+    const deckList = defaultDeckList.concat(localDeckList);
+
+    deckList.forEach(function (deck) {
+        const deckButton = document.createElement("button");
+        deckButton.textContent = deck.name;
+
+        deckButton.addEventListener("click", function () {
+            showDeckInfo(deck.id);
+        });
+
+        deckButtonList.appendChild(deckButton);
+    });
 }
 
