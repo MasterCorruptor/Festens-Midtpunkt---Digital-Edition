@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festens midtpunkt</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="menuScreen">
+		<h1>Festens midtpunkt</h1>
+		<h2>Velg kortstokk</h2>
+		<button id="festButton">Fest</button>
+		<button id="familieButton">Familie</button>
+		<button id="parButton">Par</button>
+	
+		<div id="playerSetup">
+			<h2>Spillere</h2>
+
+			<input id="playerNameInput" type="text" placeholder="Skriv spillernavn">
+
+			<button id="addPlayerButton">Legg til spiller</button>
+			<button id="deckEditorButton">Rediger kortstokker</button>
+
+			<ul id="playerList"></ul>
+			<p id="playerError"></p>
+		</div>
+	</div>
+
+	<div id="deckInfoScreen" style="display: none;">
+    <h1 id="deckTitle"></h1>
+
+    <p id="deckDescription"></p>
+
+    <p id="deckAgeRating"></p>
+    <p id="deckPlayerCount"></p>
+	<p id="deckCurrentPlayerStatus"></p>
+	
+	<p id="deckError"></p>
+
+    <button id="startSelectedDeckButton">Start spill</button>
+    <button id="backToMenuButton">Tilbake til meny</button>
+	</div>
+	
+	<div id="deckEditorScreen" style="display: none;">
+    <h1>Rediger kortstokker</h1>
+
+    <div id="deckEditorList"></div>
+
+    <button id="newDeckButton">Ny kortstokk</button>
+    <button id="backFromEditorButton">Tilbake til meny</button>
+	
+	<p id="deckEditorMessage"></p>
+	
+	</div>
+	
+	<div id="editDeckScreen" style="display: none;">
+    <h1>Rediger kortstokk</h1>
+
+    <label>Navn</label>
+    <input id="editDeckName" type="text">
+
+    <label>Beskrivelse</label>
+    <textarea id="editDeckDescription"></textarea>
+
+    <label>Aldersgrense</label>
+    <input id="editDeckAgeRating" type="text">
+
+    <label>Min spillere</label>
+    <input id="editDeckMinPlayers" type="number">
+
+    <label>Maks spillere</label>
+    <input id="editDeckMaxPlayers" type="number">
+
+    <label>Regel</label>
+    <select id="editDeckPlayerCountRule">
+        <option value="any">any</option>
+        <option value="exact">exact</option>
+        <option value="even">even</option>
+        <option value="odd">odd</option>
+    </select>
+
+    <h2>Kort</h2>
+    <div id="editDeckCardList"></div>
+	
+	<button id="addCardToDeckButton">Legg til kort</button>
+
+	<button id="saveDeckButton">Lagre kortstokk</button>
+
+	<button id="backToDeckEditorButton">Tilbake</button>
+
+	<p id="saveDeckMessage"></p>
+	</div>
+		
+    <div id="gameScreen" style="display: none;">
+        <div id="cardText" class="card">
+		Dette er det første kortet.
+		</div>
+        <button id="menuButton">Tilbake til meny</button>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
