@@ -59,26 +59,7 @@ let deckBeingEdited = null;
 
 async function showDeckInfo(deckId) {
 
-    const deckListResponse = await fetch("data/decks/index.json");
-	const defaultDeckList = await deckListResponse.json();
-
-	const localDeckList =
-		getLocalDeckList();
-
-	const deckList = defaultDeckList.concat(localDeckList);
-
-	const selectedDeck = deckList.find(function (deck) {
-		return deck.id === deckId;
-	});
-
-    let deckData;
-
-	if (selectedDeck.file === null) {
-		deckData = loadLocalDeck(selectedDeck.id);
-	}
-	else {
-		deckData = await loadDeck(selectedDeck.file);
-	}
+	const deckData = await getDeckById(deckId);
 
     selectedDeckId = deckId;
 
@@ -116,25 +97,7 @@ backToMenuButton.addEventListener("click", function () {
 async function startDeck(deckId) {
     playerError.textContent = "";
 
-    const deckListResponse = await fetch("data/decks/index.json");
-	const defaultDeckList = await deckListResponse.json();
-
-	const localDeckList =
-		getLocalDeckList();
-
-	const deckList = defaultDeckList.concat(localDeckList);
-
-	const selectedDeck = deckList.find(function (deck) {
-		return deck.id === deckId;
-	});
-
-	if (selectedDeck.file === null) {
-    currentDeck = loadLocalDeck(selectedDeck.id);
-	}
-	
-	else {
-		currentDeck = await loadDeck(selectedDeck.file);
-	}
+	currentDeck = await getDeckById(deckId);
 
     if (!isValidPlayerCount(currentDeck, players.length)) {
         deckError.textContent = "Antall spillere passer ikke for denne kortstokken.";
@@ -354,13 +317,7 @@ function formatPlayerName(name) {
 async function showDeckEditorList() {
     deckEditorList.innerHTML = "";
 
-	const deckListResponse = await fetch("data/decks/index.json");
-	const defaultDeckList = await deckListResponse.json();
-
-	const localDeckList =
-		getLocalDeckList();
-
-	const deckList = defaultDeckList.concat(localDeckList);
+	const deckList = await getDeckList();
 
 	deckList.forEach(function (deck) {
         const deckRow = document.createElement("div");
@@ -376,28 +333,23 @@ async function showDeckEditorList() {
 		editButton.addEventListener("click", function () {
 			openDeckForEditing(deck);
 		});
-
+		
+		if (deck.type === "official") {
+			editButton.disabled = true;
+		}
+		
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Slett";
         deleteButton.classList.add("removeButton");
 		
-		deleteButton.addEventListener("click", function () {
+		deleteButton.addEventListener("click", async function () {
 
-			deleteLocalDeck(deck.id);
-
-			let localDeckList =
-				getLocalDeckList();
-
-			localDeckList = localDeckList.filter(function (localDeck) {
-				return localDeck.id !== deck.id;
-			});
-
-			saveLocalDeckList(localDeckList);
+			await deleteDeckData(deck.id);
 
 			showDeckEditorList();
 		});
 		
-		if (deck.file !== null) {
+		if (deck.type === "official") {
 			deleteButton.disabled = true;
 		}
 
@@ -410,14 +362,7 @@ async function showDeckEditorList() {
 }
 
 async function openDeckForEditing(deck) {
-    let deckData;
-
-	if (deck.file === null) {
-		deckData = loadLocalDeck(deck.id);
-	}
-	else {
-		deckData = await loadDeck(deck.file);
-	}
+	const deckData = await getDeckById(deck.id);
 
     deckBeingEdited = {
     ...deckData,
@@ -480,7 +425,7 @@ addCardToDeckButton.addEventListener("click", function () {
     editDeckCardList.appendChild(cardRow);
 });
 
-saveDeckButton.addEventListener("click", function () {
+saveDeckButton.addEventListener("click", async function () {
     const cardInputs = editDeckCardList.querySelectorAll(".cardEditorInput");
 
     const cards = [];
@@ -495,8 +440,8 @@ saveDeckButton.addEventListener("click", function () {
 
     const updatedDeck = {
         id: deckBeingEdited.id === "ny_kortstokk"
-			? createDeckId(editDeckName.value.trim())
-			: deckBeingEdited.id,
+            ? createDeckId(editDeckName.value.trim())
+            : deckBeingEdited.id,
         name: editDeckName.value.trim(),
         description: editDeckDescription.value.trim(),
         minPlayers: Number(editDeckMinPlayers.value),
@@ -506,57 +451,19 @@ saveDeckButton.addEventListener("click", function () {
         cards: cards
     };
 
-    saveLocalDeck(updatedDeck);
-	
-	if (deckBeingEdited.id === "ny_kortstokk" || deckBeingEdited.file === null) {
-    let localDeckList = getLocalDeckList();
+    const savedDeck = await saveDeckData(updatedDeck);
+    // updateLocalDeckList(updatedDeck);
 
-    const deckAlreadyExists = localDeckList.some(function (deck) {
-        return deck.id === updatedDeck.id;
-    });
+    deckBeingEdited = updatedDeck;
+    console.log(updatedDeck);
 
-    if (!deckAlreadyExists) {
-        localDeckList.push({
-            id: updatedDeck.id,
-            name: updatedDeck.name,
-            file: null
-        });
-    }
-    else {
-        localDeckList = localDeckList.map(function (deck) {
-            if (deck.id === updatedDeck.id) {
-                return {
-                    id: updatedDeck.id,
-                    name: updatedDeck.name,
-                    file: null
-                };
-            }
-
-            return deck;
-        });
-    }
-
-    saveLocalDeckList(localDeckList);
-}
-
-deckBeingEdited = updatedDeck;
-	console.log(updatedDeck);
-
-	saveDeckMessage.textContent =
-    "Kortstokken er lagret lokalt.";
+    saveDeckMessage.textContent =
+        "Kortstokken er lagret lokalt.";
 });
 
-async function loadDeck(deckFile) {
-    const response = await fetch("data/decks/" + deckFile);
-    const deckData = await response.json();
-
-    const savedDeck = loadLocalDeck(deckData.id);
-
-	if (savedDeck !== null) {
-		return savedDeck;
-	}
-
-    return deckData;
+async function getDeckById(deckId) {
+    const response = await fetch("http://localhost:3000/api/decks/" + deckId);
+    return await response.json();
 }
 
 function openNewDeckEditor() {
@@ -608,13 +515,7 @@ backFromChooseDeckButton.addEventListener("click", function () {
 async function showChooseDeckList() {
     deckButtonList.innerHTML = "";
 
-    const deckListResponse = await fetch("data/decks/index.json");
-    const defaultDeckList = await deckListResponse.json();
-
-    const localDeckList =
-        getLocalDeckList();
-
-    const deckList = defaultDeckList.concat(localDeckList);
+    const deckList = await getDeckList();
 
     deckList.forEach(function (deck) {
         const deckButton = document.createElement("button");
@@ -639,30 +540,42 @@ function showScreen(screenToShow) {
     screenToShow.style.display = "flex";
 }
 
-function getLocalDeckList() {
-    return JSON.parse(localStorage.getItem("localDeckList")) || [];
+async function saveDeckData(deck) {
+
+    const deckExists =
+        deckBeingEdited.id !== "ny_kortstokk";
+
+    const method =
+        deckExists ? "PUT" : "POST";
+
+    const url =
+        deckExists
+            ? "http://localhost:3000/api/decks/" + deck.id
+            : "http://localhost:3000/api/decks";
+
+    const response = await fetch(url, {
+        method: method,
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(deck)
+    });
+
+    return await response.json();
 }
 
-function saveLocalDeckList(deckList) {
-    localStorage.setItem(
-        "localDeckList",
-        JSON.stringify(deckList)
+async function deleteDeckData(deckId) {
+    const response = await fetch(
+        "http://localhost:3000/api/decks/" + deckId,
+        {
+            method: "DELETE"
+        }
     );
+
+    return await response.json();
 }
 
-function loadLocalDeck(deckId) {
-    return JSON.parse(
-        localStorage.getItem("deck_" + deckId)
-    );
-}
-
-function deleteLocalDeck(deckId) {
-    localStorage.removeItem("deck_" + deckId);
-}
-
-function saveLocalDeck(deck) {
-    localStorage.setItem(
-        "deck_" + deck.id,
-        JSON.stringify(deck)
-    );
+async function getDeckList() {
+    const response = await fetch("http://localhost:3000/api/decks");
+    return await response.json();
 }

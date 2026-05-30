@@ -1,0 +1,14 @@
+{
+    "id": "par",
+    "name": "Par",
+    "description": "Kort for par.",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "ageRating": "16+",
+	"playerCountRule": "even",
+    "cards": [
+        "Par 1 - Hva setter du mest pris på hos partneren din?",
+        "Par 2 - Hva var ditt første inntrykk av {player}?",
+        "Par 3 - {player}, beskriv en perfekt date for deg."
+    ]
+}

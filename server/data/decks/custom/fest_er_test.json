@@ -1,0 +1,15 @@
+{
+    "id": "fest_er_test",
+    "name": "Fest er TEST",
+    "description": "En god test kan jo bli en riktig fest",
+    "minPlayers": 2,
+    "maxPlayers": 10,
+    "ageRating": "16+",
+    "playerCountRule": "any",
+    "cards": [
+        "Oi du blir testet!",
+        "Nå blir du festet!",
+        "Heia festeteste!"
+    ],
+    "type": "custom"
+}
