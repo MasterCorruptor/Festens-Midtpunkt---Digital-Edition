@@ -122,6 +122,11 @@ Sissel og Erlend må samarbeide.
 ### Navngitte spillere
 
 Brukes når samme spiller må refereres til flere ganger.
+Da brukes syntaxen
+
+```text
+{player1} og {player2}
+```
 
 ```text
 {player1} skal beskrive {player2}.
@@ -179,3 +184,9 @@ Foreløpig lagres ikke data på server.
 ## Prosjektmål
 
 Målet med prosjektet er å lage en fleksibel plattform for sosiale kortspill hvor nye kortstokker kan opprettes, redigeres og spilles uten programmeringskunnskap.
+
+## Repository
+
+Prosjektet vedlikeholdes i GitHub:
+
+https://github.com/MasterCorruptor/Festens-Midtpunkt---Digital-Edition/edit/main/README.md
