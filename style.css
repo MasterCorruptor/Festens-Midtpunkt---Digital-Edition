@@ -105,3 +105,35 @@ button:disabled {
     align-items: center;
 }
 
+@media (max-width: 600px) {
+    #menuScreen {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 24px 16px;
+        align-items: center;
+    }
+
+    #menuScreen h1 {
+        font-size: 2.4rem;
+        text-align: center;
+    }
+
+    #menuScreen button,
+    #playerNameInput {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #playerSetup {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+	}
+
+    #playerSetup h2 {
+        text-align: left;
+    }
+}
+

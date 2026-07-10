@@ -1,0 +1,11 @@
+services:
+  festens-midtpunkt:
+    build: .
+    container_name: festens_midtpunkt
+    restart: unless-stopped
+
+    ports:
+      - "30050:3000"
+
+    volumes:
+      - ./server/data:/app/server/data

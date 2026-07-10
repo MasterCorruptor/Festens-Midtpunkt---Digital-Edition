@@ -81,6 +81,7 @@ function getDeckType(deckId) {
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static(path.join(__dirname, "..")));
 
 app.get("/api/decks", function (req, res) {
     const officialDecks = readDeckSummariesFromFolder(officialDecksPath, "official");

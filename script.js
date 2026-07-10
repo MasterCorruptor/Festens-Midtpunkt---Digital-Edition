@@ -128,50 +128,62 @@ menuButton.addEventListener("click", function () {
     currentCardIndex = 0;
 });
 
-addPlayerButton.addEventListener("click", function () {
-
+function addPlayer() {
     let playerName = playerNameInput.value.trim();
-	playerName = formatPlayerName(playerName);
+    playerName = formatPlayerName(playerName);
 
     if (playerName === "") {
         return;
     }
-	
-	const playerNameExists = players.some(function (existingPlayerName) {
-    return existingPlayerName.toLowerCase() === playerName.toLowerCase();
-	});
 
-	if (playerNameExists) {
-    playerError.textContent = "Spilleren eksisterer allerede.";
-    return;
-	}
+    const playerNameExists = players.some(function (existingPlayerName) {
+        return existingPlayerName.toLowerCase() === playerName.toLowerCase();
+    });
 
-	playerError.textContent = "";
-    
-	players.push(playerName);
+    if (playerNameExists) {
+        playerError.textContent = "Spilleren eksisterer allerede.";
+        return;
+    }
+
+    playerError.textContent = "";
+
+    players.push(playerName);
 
     const listItem = document.createElement("li");
 
-	const nameSpan = document.createElement("span");
-	nameSpan.textContent = playerName;
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = playerName;
 
-	const removeButton = document.createElement("button");
-	removeButton.classList.add("removeButton");
-	
-	removeButton.textContent = "Fjern";
+    const removeButton = document.createElement("button");
+    removeButton.classList.add("removeButton");
+    removeButton.textContent = "Fjern";
 
-	removeButton.addEventListener("click", function () {
-    players = players.filter(function (name) {
-        return name !== playerName;
+    removeButton.addEventListener("click", function () {
+        players = players.filter(function (name) {
+            return name !== playerName;
+        });
+
+        listItem.remove();
     });
 
-    listItem.remove();
+    listItem.appendChild(nameSpan);
+    listItem.appendChild(removeButton);
+
+    playerList.appendChild(listItem);
+
+    playerNameInput.value = "";
+    playerNameInput.focus();
+}
+
+addPlayerButton.addEventListener("click", function () {
+    addPlayer();
 });
 
-listItem.appendChild(nameSpan);
-listItem.appendChild(removeButton);
-
-playerList.appendChild(listItem);
+playerNameInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        addPlayer();
+    }
 });
 
 deckEditorButton.addEventListener("click", function () {
@@ -462,7 +474,7 @@ saveDeckButton.addEventListener("click", async function () {
 });
 
 async function getDeckById(deckId) {
-    const response = await fetch("http://localhost:3000/api/decks/" + deckId);
+    const response = await fetch("/api/decks/" + deckId);
     return await response.json();
 }
 
@@ -550,8 +562,8 @@ async function saveDeckData(deck) {
 
     const url =
         deckExists
-            ? "http://localhost:3000/api/decks/" + deck.id
-            : "http://localhost:3000/api/decks";
+            ? "/api/decks/" + deck.id
+			: "/api/decks";
 
     const response = await fetch(url, {
         method: method,
@@ -566,7 +578,7 @@ async function saveDeckData(deck) {
 
 async function deleteDeckData(deckId) {
     const response = await fetch(
-        "http://localhost:3000/api/decks/" + deckId,
+        "/api/decks/" + deckId,
         {
             method: "DELETE"
         }
@@ -576,6 +588,6 @@ async function deleteDeckData(deckId) {
 }
 
 async function getDeckList() {
-    const response = await fetch("http://localhost:3000/api/decks");
+    const response = await fetch("/api/decks");
     return await response.json();
 }
