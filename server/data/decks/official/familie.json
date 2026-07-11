@@ -5,10 +5,12 @@
     "minPlayers": 2,
     "maxPlayers": 10,
     "ageRating": "Alle",
-	"playerCountRule": "any",
+    "playerCountRule": "any",
     "cards": [
         "Familie 1 - Hva er ditt beste barndomsminne?",
         "Familie 2 - Hvem i familien lager best mat?",
         "Familie 3 - Hvilken ferie husker du best?"
-    ]
+    ],
+    "penaltyCards": [],
+    "type": "official"
 }

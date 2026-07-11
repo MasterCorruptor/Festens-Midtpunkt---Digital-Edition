@@ -1,181 +1,157 @@
 # Festens Midtpunkt
 
-Et digitalt kortspill-system bygget som en nettapplikasjon. Prosjektet er laget for å gjøre det enkelt å opprette, redigere og spille forskjellige kortstokker uten å måtte endre kode eller redigere JSON-filer manuelt.
+Festens Midtpunkt er en selvhostet nettapplikasjon for digitale selskaps- og kortspill. Applikasjonen støtter offisielle og egendefinerte kortstokker, spillere, plassholdere, straffekort og redigering direkte i nettleseren.
 
-## Hovedfunksjoner
+Nåværende versjon: **v0.5.0**
 
-### Spillmotor
+## Nåværende funksjonalitet
 
-* Trekker kort tilfeldig fra valgt kortstokk.
-* Kort stokkes automatisk ved oppstart.
-* Støtte for spillerbaserte plassholdere.
-* Støtte for metadata og spillregler.
-* Validering av spillerantall før spillstart.
+### Spill
 
-### Kortstokk-editor
+- Registrering og fjerning av spillere.
+- Validering av minimum, maksimum og spillerregel før start.
+- Tilfeldig stokking av vanlige kort ved spillstart.
+- Godkjenning eller avvisning av hvert vanlig kort.
+- Tilfeldige straffekort når et kort avvises.
+- Oppsummering av godkjente, avviste og trukne straffekort.
+- Statistikk over spillerne som oftest ble valgt gjennom plassholdere.
+- Restart eller retur til hovedmenyen etter avsluttet spill.
 
-* Opprett nye kortstokker.
-* Rediger eksisterende kortstokker.
-* Legg til og fjern kort.
-* Rediger metadata.
-* Lokal lagring i nettleseren.
-* Endringer brukes direkte av spillmotoren.
+### Kortstokkeditor
 
-## Kortstokkformat
-
-Eksempel:
-
-```json
-{
-    "id": "fest",
-    "name": "Fest",
-    "description": "Kort for fest og sosiale sammenkomster.",
-    "minPlayers": 2,
-    "maxPlayers": 12,
-    "ageRating": "16+",
-    "playerCountRule": "any",
-
-    "cards": [
-        "{player} må fortelle en morsom historie.",
-        "{player} og {player} må samarbeide.",
-        "{player1} skal beskrive {player2} med tre ord."
-    ]
-}
-```
-
-## Metadata
-
-| Felt            | Beskrivelse                |
-| --------------- | -------------------------- |
-| id              | Intern unik identifikator  |
-| name            | Navn vist til brukeren     |
-| description     | Beskrivelse av kortstokken |
-| minPlayers      | Minimum antall spillere    |
-| maxPlayers      | Maksimum antall spillere   |
-| ageRating       | Anbefalt aldersgrense      |
-| playerCountRule | Regler for spillerantall   |
-| cards           | Liste over kort            |
-
-### playerCountRule
-
-Mulige verdier:
-
-```text
-any
-exact
-even
-odd
-```
-
-#### any
-
-Alle antall spillere innenfor minimum og maksimum.
-
-#### exact
-
-Eksakt antall spillere kreves.
-
-#### even
-
-Kun partall.
-
-#### odd
-
-Kun oddetall.
-
-## Plassholdersystem
-
-### Enkel spiller
-
-```text
-{player}
-```
-
-Trekker en tilfeldig spiller.
-
-Eksempel:
-
-```text
-{player} må synge en sang.
-```
-
-Resultat:
-
-```text
-Sissel må synge en sang.
-```
-
-### Flere spillere
-
-```text
-{player} og {player} må samarbeide.
-```
-
-Motoren velger ulike spillere automatisk.
-
-Resultat:
-
-```text
-Sissel og Erlend må samarbeide.
-```
-
-### Navngitte spillere
-
-Brukes når samme spiller må refereres til flere ganger.
-
-```text
-{player1} skal beskrive {player2}.
-
-Deretter skal {player1} velge neste oppgave for {player2}.
-```
-
-Resultat:
-
-```text
-Sissel skal beskrive Erlend.
-
-Deretter skal Sissel velge neste oppgave for Erlend.
-```
-
-## Lokal lagring
-
-Editoren lagrer kortstokker i nettleserens Local Storage.
-
-Dette betyr:
-
-* Kortstokker beholdes etter oppdatering av siden.
-* Kortstokker beholdes etter omstart av nettleseren.
-* Kortstokker er lokale for den aktuelle enheten.
-
-Foreløpig lagres ikke data på server.
-
-## Planlagt funksjonalitet
-
-### Kortsiktig
-
-* Dynamisk spillmeny.
-* Import av kortstokker.
-* Eksport av kortstokker.
-* Forbedret mobilgrensesnitt.
-* Bekreftelsesdialog ved sletting.
-
-### Langsiktig
-
-* Serverbasert lagring.
-* Brukerkontoer.
-* Deling av kortstokker.
-* Synkronisering mellom enheter.
-* Administrasjonspanel.
-* Kortstokk-bibliotek.
+- Opprettelse av egendefinerte kortstokker.
+- Redigering av offisielle og egendefinerte kortstokker.
+- Sletting av egendefinerte kortstokker etter bekreftelse.
+- Beskyttelse mot sletting av offisielle kortstokker.
+- Bulkimport av vanlige kort og straffekort, én linje per kort.
+- Egen kortliste for redigering og fjerning av kort.
+- Knapper for innsetting av `{player}`, `{player1}` og `{player2}`.
+- Servervalidering av ID, navn, metadata, spillerregler og kortinnhold.
+- Synlige feil ved lasting, lagring og sletting.
 
 ## Teknologi
 
-* HTML
-* CSS
-* JavaScript
-* JSON
-* Local Storage
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Node.js
+- Express
+- JSON-filer
+- Docker og Docker Compose
 
-## Prosjektmål
+Det brukes ingen frontend-rammeverk, database eller byggpipeline.
 
-Målet med prosjektet er å lage en fleksibel plattform for sosiale kortspill hvor nye kortstokker kan opprettes, redigeres og spilles uten programmeringskunnskap.
+## Lokal kjøring
+
+Installer avhengigheter og start serveren fra `server`-mappen:
+
+```powershell
+cd server
+npm install
+npm start
+```
+
+Åpne deretter:
+
+```text
+http://localhost:3000
+```
+
+Serveren leverer både frontendfilene og API-et.
+
+## Docker
+
+Bygg og start med:
+
+```powershell
+docker compose up --build
+```
+
+Docker Compose eksponerer applikasjonen på:
+
+```text
+http://localhost:30050
+```
+
+`server/data` bind-monteres til containeren slik at kortstokkendringer lagres på vertsmaskinen. Se [docs/docker.md](docs/docker.md) for detaljer og kjente begrensninger.
+
+## Lagring
+
+Kortstokker lagres på serveren som JSON-filer:
+
+```text
+server/data/decks/official/
+server/data/decks/custom/
+```
+
+`server/data/decks/official` er eneste autoritative lager for offisielle kortstokker.
+
+Offisielle kortstokker kan redigeres, men ikke slettes gjennom API-et. Egendefinerte kortstokker kan opprettes, redigeres og slettes.
+
+Spillere og aktiv spilltilstand finnes bare i nettleserminnet og forsvinner ved sideoppdatering.
+
+## Kortstokkformat
+
+Et kortstokkobjekt har følgende implementerte format:
+
+```json
+{
+  "id": "eksempel",
+  "name": "Eksempel",
+  "description": "En kort beskrivelse.",
+  "minPlayers": 2,
+  "maxPlayers": 10,
+  "ageRating": "16+",
+  "playerCountRule": "any",
+  "cards": [
+    "{player} skal utføre en oppgave.",
+    "{player1} skal beskrive {player2}."
+  ],
+  "penaltyCards": [
+    "Straffekort: Ta en valgfri straff."
+  ]
+}
+```
+
+Gyldige spillerregler:
+
+- `any`: alle spillerantall innenfor intervallet.
+- `exact`: minimum og maksimum må være samme tall.
+- `even`: intervallet må inneholde et tillatt partall.
+- `odd`: intervallet må inneholde et tillatt oddetall.
+
+Se [docs/deck-format.md](docs/deck-format.md) for fullstendig format og valideringsregler.
+
+## Plassholdere
+
+- `{player}` velger neste spiller fra en tilfeldig rekkefølge for kortet.
+- Flere `{player}` bruker forskjellige spillere så lenge nok spillere finnes.
+- `{player1}`, `{player2}` og andre nummererte varianter beholder samme spiller for alle forekomster av samme token på kortet.
+
+Se [docs/placeholder-system.md](docs/placeholder-system.md) for nøyaktige regler og kanttilfeller.
+
+## API
+
+| Metode | Endepunkt | Funksjon |
+| --- | --- | --- |
+| `GET` | `/api/decks` | Liste over kortstokker |
+| `GET` | `/api/decks/:id` | Hent full kortstokk |
+| `POST` | `/api/decks` | Opprett egendefinert kortstokk |
+| `PUT` | `/api/decks/:id` | Oppdater offisiell eller egendefinert kortstokk |
+| `DELETE` | `/api/decks/:id` | Slett egendefinert kortstokk |
+
+Se [docs/api.md](docs/api.md) for requestformat, responsformat og feiltilfeller.
+
+## Dokumentasjon
+
+- [Arkitektur](docs/architecture.md)
+- [API](docs/api.md)
+- [Kortstokkformat](docs/deck-format.md)
+- [Spillflyt](docs/game-flow.md)
+- [Plassholdersystem](docs/placeholder-system.md)
+- [Docker](docs/docker.md)
+- [Roadmap](docs/roadmap.md)
+
+## Utviklingsregler
+
+Alle endringer skal følge [AGENTS.md](AGENTS.md). Programadferd, API-format og JSON-format skal ikke endres uten at dokumentasjonen oppdateres samtidig.

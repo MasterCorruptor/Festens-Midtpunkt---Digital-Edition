@@ -29,6 +29,18 @@ button {
     cursor: pointer;
 }
 
+input,
+textarea,
+select {
+    font-size: 1.1rem;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1px solid #555555;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    box-sizing: border-box;
+}
+
 button:hover {
     background-color: #2563eb;
 }
@@ -38,6 +50,7 @@ button:hover {
 #deckInfoScreen,
 #deckEditorScreen,
 #editDeckScreen,
+#gameSummaryScreen,
 #gameScreen {
     display: flex;
     flex-direction: column;
@@ -48,19 +61,26 @@ button:hover {
 .card {
     width: min(90vw, 600px);
     min-height: 260px;
+    height: auto;
 
     padding: 30px;
+
+    box-sizing: border-box;
 
     border: 2px solid #ffffff;
     border-radius: 18px;
 
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 
     text-align: center;
     font-size: 1.6rem;
     line-height: 1.4;
+
+    overflow-wrap: break-word;
+    word-break: normal;
+    white-space: normal;
 
     cursor: pointer;
     user-select: none;
@@ -85,11 +105,94 @@ button:hover {
     align-items: center;
     gap: 10px;
     margin-bottom: 10px;
-	
+
 }
 
 .cardEditorRow .cardEditorInput {
     width: min(70vw, 600px);
+}
+
+.heroLogo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.cardFan {
+    position: relative;
+    width: 150px;
+    height: 80px;
+}
+
+.miniCard {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+
+    width: 48px;
+    height: 68px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #202020;
+    color: #ffffff;
+
+    border: 3px solid #ffffff;
+    border-radius: 10px;
+
+    font-size: 1.8rem;
+    font-weight: bold;
+
+    transform-origin: bottom center;
+}
+
+.miniCard:first-child {
+    transform: translateX(-85%) rotate(-18deg);
+}
+
+.centerCard {
+    color: #facc15;
+    z-index: 2;
+    transform: translateX(-50%) rotate(0deg);
+}
+
+.miniCard:last-child {
+    color: #3b82f6;
+    transform: translateX(-15%) rotate(18deg);
+}
+
+.curvedTitle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 0.95;
+}
+
+.curvedTitle span:first-child {
+    font-size: 3.1rem;
+    font-weight: 900;
+    color: #ffffff;
+
+    transform: rotate(-3deg);
+    text-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.curvedTitle span:last-child {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #facc15;
+
+    letter-spacing: 0.18em;
+    transform: rotate(3deg);
 }
 
 button:disabled {
@@ -105,11 +208,37 @@ button:disabled {
     align-items: center;
 }
 
+#menuScreen,
+#chooseDeckScreen,
+#deckInfoScreen,
+#deckEditorScreen,
+#editDeckScreen {
+    background: linear-gradient(180deg, #2a2a2a, #1f1f1f);
+    border: 1px solid #3a3a3a;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
 @media (max-width: 600px) {
+    html,
+    body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
     #menuScreen {
         width: 100%;
-        box-sizing: border-box;
+        max-width: 390px;
         padding: 24px 16px;
+        box-sizing: border-box;
         align-items: center;
     }
 
@@ -118,22 +247,182 @@ button:disabled {
         text-align: center;
     }
 
-    #menuScreen button,
-    #playerNameInput {
+    #menuScreen > button,
+    #playerSetup {
         width: 100%;
         box-sizing: border-box;
     }
 
     #playerSetup {
-    width: 100%;
-    max-width: 360px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-	}
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #playerNameInput,
+    #addPlayerButton {
+        width: 100%;
+		min-height: 52px;
+        box-sizing: border-box;
+    }
 
     #playerSetup h2 {
         text-align: left;
     }
+
+	#menuScreen,
+	#chooseDeckScreen,
+	#deckInfoScreen,
+	#deckEditorScreen,
+	#editDeckScreen {
+		width: 100%;
+		max-width: 390px;
+		padding: 24px 16px;
+		box-sizing: border-box;
+	}
+
+	.cardFan {
+    transform: scale(0.9);
 }
 
+	.curvedTitle span:first-child {
+    font-size: 2.6rem;
+}
+
+	.curvedTitle span:last-child {
+    font-size: 1.25rem;
+}
+
+}
+
+#playerList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+#playerList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 12px 16px;
+    margin-bottom: 8px;
+
+    background-color: #2a2a2a;
+    border-radius: 8px;
+}
+
+#playerList .removeButton {
+    margin-left: 16px;
+    flex-shrink: 0;
+}
+
+#placeholderToolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+#placeholderToolbar button {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+}
+
+#placeholderHelp {
+    font-size: 0.9rem;
+    color: #bbbbbb;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+#cardActionButtons {
+    display: flex;
+    gap: 15px;
+}
+
+#acceptCardButton,
+#rejectCardButton {
+    font-size: 1.4rem;
+    padding: 18px 40px;
+    min-width: 160px;
+}
+
+#acceptCardButton {
+    background-color: #16a34a;
+}
+
+#acceptCardButton:hover {
+    background-color: #15803d;
+}
+
+#rejectCardButton {
+    background-color: #dc2626;
+}
+
+#rejectCardButton:hover {
+    background-color: #b91c1c;
+}
+
+#gameMenuArea {
+    margin-top: 60px;
+}
+
+#editDeckScreen #editDeckCardList,
+#editDeckScreen #editDeckPenaltyCardList {
+    display: none;
+}
+
+#bulkCardInput,
+#bulkPenaltyCardInput {
+    width: min(90vw, 700px);
+    min-height: 160px;
+    resize: vertical;
+    font-family: Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+#cardListScreen {
+    width: min(95vw, 900px);
+    box-sizing: border-box;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+}
+
+#cardListScreen h1,
+#cardListScreen h2 {
+    text-align: center;
+}
+
+#cardListNormalCards,
+#cardListPenaltyCards {
+    width: 100%;
+}
+
+#cardListScreen .cardEditorRow {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+#cardListScreen .cardEditorInput {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#cardListScreen .removeButton {
+    margin-left: 0;
+}
+
+#backToEditDeckButton {
+    align-self: center;
+}

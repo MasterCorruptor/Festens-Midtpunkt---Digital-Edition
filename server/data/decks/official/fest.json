@@ -1,19 +1,27 @@
 {
     "id": "fest",
-    "name": "Fest",
-    "description": "En lett og sosial kortstokk for festlige sammenkomster.",
+    "name": "Drikkefest",
+    "description": "En fuktig blanding kort som garantert gir deg 2 i promille! Her gjelder det å være venn med Fru Fortuna slik at du får de beste kortene og slipper unna å chugge!",
     "minPlayers": 2,
     "maxPlayers": 12,
-    "ageRating": "16+",
-	"playerCountRule": "any",
+    "ageRating": "18+",
+    "playerCountRule": "any",
     "cards": [
-    "Kort 1 - Du må få {player} til å le innen 30 sekunder.",
-    "Kort 2 - Fortell om en pinlig opplevelse.",
-    "Kort 3 - Hvem ved bordet ville overlevd lengst på en øde øy?",
-    "Kort 4 - Ville du dratt på ferie med {player}?",
-	"Kort 5 - {player} og {player} må sammarbeide!",
-	"Kort 6 - {player} må gi {player} en klem.",
-	"Kort 7 - {player1} må fortelle en vits til {player2}. Dersom {player2} ler, må {player2} gi {player1} en klem."
-]
-
+        "Du må få {player} til å le innen 30 sekunder. Om du ikke får det må du drikke to slurker",
+        "Fortell om en pinlig opplevelse du hadde på byen. Alle drikker for å glemme det.",
+        "Hvem ved bordet ville overlevd lengst på en øde øy? Alle stemmer på en person. Den med flest stemmer må drikke en slurk.",
+        "Ville du dratt på ferie med {player}? Skål for det!",
+        "{player} og {player} må sammarbeide! Dere skal gi hverandre en slurk av hverandres drikke samtidig. Ikke søl.",
+        "{player} må gi {player} påfyll i glasset.",
+        "{player} må overtale deg til å tømme glasset ditt!",
+        "{player1} må fortelle en vits til {player2}. Dersom {player2} ler, må {player2} gi {player1} en klem."
+    ],
+    "penaltyCards": [
+        "Straffekort: Ta to slurker fordi du feiget ut.",
+        "Straffekort: {player} velger en oppgave du må gjøre.",
+        "Straffekort: Skål med {player}, og begge tar en slurk.",
+        "Straffekort: Fortell hvem rundt bordet som tåler minst alkohol.",
+        "Straffekort: Du må holde neste skål."
+    ],
+    "type": "official"
 }
