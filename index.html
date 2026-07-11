@@ -31,6 +31,7 @@
 
         <input id="playerNameInput"
                type="text"
+               autocomplete="off"
                placeholder="Skriv spillernavn">
 
         <button id="addPlayerButton">Legg til spiller</button>
@@ -41,115 +42,142 @@
     </div>
 </div>
 
-<div id="chooseDeckScreen" style="display: none;">
+<div id="chooseDeckScreen" class="hasBottomActionBar" style="display: none;">
     <h1>Velg spill</h1>
 
     <div id="deckButtonList"></div>
 
     <p id="chooseDeckError"></p>
 
-    <button id="backFromChooseDeckButton">
-        Tilbake til meny
-    </button>
+    <div class="bottomActionBar">
+        <button id="backFromChooseDeckButton" class="menuNavigationButton">
+            Tilbake til meny
+        </button>
+    </div>
 </div>
 
-<div id="deckInfoScreen" style="display: none;">
+<div id="deckInfoScreen" class="hasBottomActionBar" style="display: none;">
     <h1 id="deckTitle"></h1>
 
     <p id="deckDescription"></p>
 
     <p id="deckAgeRating"></p>
     <p id="deckPlayerCount"></p>
+	<p id="deckPlayerRule"></p>
 	<p id="deckCurrentPlayerStatus"></p>
 
 	<p id="deckError"></p>
 
-    <button id="startSelectedDeckButton">Start spill</button>
-    <button id="backToMenuButton">Tilbake til meny</button>
+    <div class="bottomActionBar">
+        <button id="startSelectedDeckButton">Start spill</button>
+        <button id="backToMenuButton" class="menuNavigationButton">Tilbake til meny</button>
+    </div>
 </div>
 
-<div id="deckEditorScreen" style="display: none;">
+<div id="deckEditorScreen" class="hasBottomActionBar" style="display: none;">
     <h1>Rediger kortstokker</h1>
 
     <div id="deckEditorList"></div>
 
-    <button id="newDeckButton">Ny kortstokk</button>
-    <button id="backFromEditorButton">Tilbake til meny</button>
-
 	<p id="deckEditorMessage"></p>
 
+    <div class="bottomActionBar">
+        <button id="newDeckButton">Ny kortstokk</button>
+        <button id="backFromEditorButton" class="menuNavigationButton">Tilbake til meny</button>
+    </div>
 </div>
 
-<div id="editDeckScreen" style="display: none;">
+<div id="editDeckScreen" class="hasBottomActionBar" style="display: none;">
     <h1>Rediger kortstokk</h1>
 
-    <label>Navn</label>
-    <input id="editDeckName" type="text">
+    <div class="editorMetadataGrid">
+        <div class="editorFormField">
+            <label for="editDeckName">Navn</label>
+            <input id="editDeckName" type="text">
+        </div>
 
-    <label>Beskrivelse</label>
-    <textarea id="editDeckDescription"></textarea>
+        <div class="editorFormField">
+            <label for="editDeckAgeRating">Aldersgrense</label>
+            <input id="editDeckAgeRating" type="text">
+        </div>
 
-    <label>Aldersgrense</label>
-    <input id="editDeckAgeRating" type="text">
+        <div class="editorFormField">
+            <label for="editDeckMinPlayers">Min spillere</label>
+            <input id="editDeckMinPlayers" type="number">
+        </div>
 
-    <label>Min spillere</label>
-    <input id="editDeckMinPlayers" type="number">
+        <div class="editorFormField">
+            <label for="editDeckMaxPlayers">Maks spillere</label>
+            <input id="editDeckMaxPlayers" type="number">
+        </div>
 
-    <label>Maks spillere</label>
-    <input id="editDeckMaxPlayers" type="number">
+        <div class="editorFormField editorFormFieldFull">
+            <label for="editDeckPlayerCountRule">Regel</label>
+            <select id="editDeckPlayerCountRule">
+                <option value="any">Opp til maks spillere (any)</option>
+                <option value="exact">Akkurat samme som min og maks dersom de er like (exact)</option>
+                <option value="even">Må være partall med spillere (even)</option>
+                <option value="odd">Må være oddetall med spillere (odd)</option>
+            </select>
+        </div>
 
-    <label>Regel</label>
-    <select id="editDeckPlayerCountRule">
-        <option value="any">Opp til maks spillere</option>
-        <option value="exact">Akkurat samme som min og maks dersom de er like</option>
-        <option value="even">Må være partall med spillere</option>
-        <option value="odd">Må være oddetall med spillere</option>
-    </select>
+        <div class="editorFormField editorFormFieldFull">
+            <label for="editDeckDescription">Beskrivelse</label>
+            <textarea id="editDeckDescription" class="autoResizeTextarea descriptionTextarea"></textarea>
+        </div>
+    </div>
 
-	<h2>Kort</h2>
+    <section class="placeholderGuideSection" aria-labelledby="placeholderGuideHeading">
+        <div class="placeholderGuideText">
+            <h2 id="placeholderGuideHeading">Spillerkoder</h2>
+            <p id="placeholderHelp">
+                Klikk først i tekstfeltet der koden skal settes inn. <strong>{player}</strong> velger en ny tilfeldig spiller for hver forekomst. <strong>{player1}</strong> og <strong>{player2}</strong> velger forskjellige spillere og bruker samme navn igjen når den samme nummererte koden gjentas.
+            </p>
+        </div>
 
-    <div id="placeholderToolbar">
-		<button id="insertPlayerButton">{player}</button>
-		<button id="insertPlayer1Button">{player1}</button>
-		<button id="insertPlayer2Button">{player2}</button>
-	</div>
+        <div id="placeholderToolbar" aria-label="Sett inn spillerkode">
+            <button id="insertPlayerButton">{player}</button>
+            <button id="insertPlayer1Button">{player1}</button>
+            <button id="insertPlayer2Button">{player2}</button>
+        </div>
+    </section>
 
-	<p id="placeholderHelp">
-    {player} = velger én eller flere tilfeldig spillere<br>
-    {player1} + {player2} = velger to forskjellige spillere og beholder samme navn dersom det brukes flere ganger i en tekst.
-	</p>
+    <div class="editorCardSections">
+        <section class="editorCardSection" aria-labelledby="normalCardsHeading">
+            <h2 id="normalCardsHeading">Vanlige kort</h2>
 
-	<div id="editDeckCardList"></div>
+            <div id="editDeckCardList"></div>
 
-	<textarea id="bulkCardInput" placeholder="Lim inn flere kort her. Én linje blir ett kort."></textarea>
-	<button id="addBulkCardsButton">
-		Legg til flere kort
-	</button>
-	<p id="bulkCardMessage"></p>
+            <textarea id="bulkCardInput" class="autoResizeTextarea bulkTextarea" placeholder="Lim inn flere kort her. Én linje blir ett kort."></textarea>
+            <button id="addBulkCardsButton">Legg til flere kort</button>
+            <p id="bulkCardMessage" class="editorSectionMessage"></p>
+        </section>
 
-	<h2>Straffekort</h2>
-	<textarea
-		id="bulkPenaltyCardInput"
-		placeholder="Lim inn flere straffekort her. Én linje blir ett straffekort."
-	></textarea>
+        <section class="editorCardSection" aria-labelledby="penaltyCardsHeading">
+            <h2 id="penaltyCardsHeading">Straffekort</h2>
 
-	<button id="addBulkPenaltyCardsButton">
-		Legg til flere straffekort
-	</button>
-	<p id="bulkPenaltyCardMessage"></p>
+            <div id="editDeckPenaltyCardList"></div>
 
-	<div id="editDeckPenaltyCardList"></div>
+            <textarea
+                id="bulkPenaltyCardInput"
+                class="autoResizeTextarea bulkTextarea"
+                placeholder="Lim inn flere straffekort her. Én linje blir ett straffekort."
+            ></textarea>
 
-	<button id="showCardListButton">Vis kortliste</button>
+            <button id="addBulkPenaltyCardsButton">Legg til flere straffekort</button>
+            <p id="bulkPenaltyCardMessage" class="editorSectionMessage"></p>
+        </section>
+    </div>
 
-	<button id="saveDeckButton">Lagre kortstokk</button>
+    <div class="editorActions bottomActionBar">
+        <button id="showCardListButton">Vis kortliste</button>
+        <button id="saveDeckButton">Lagre kortstokk</button>
+        <button id="backToDeckEditorButton">Tilbake</button>
+        <p id="saveDeckMessage" class="editorActionMessage"></p>
+    </div>
+</div>
 
-	<button id="backToDeckEditorButton">Tilbake</button>
-
-	<p id="saveDeckMessage"></p>
-	</div>
-
-<div id="cardListScreen" style="display: none;">
+<div id="cardListScreen" class="hasBottomActionBar" style="display: none;">
     <h1>Kortliste</h1>
 
     <h2>Vanlige kort</h2>
@@ -158,10 +186,12 @@
     <h2>Straffekort</h2>
     <div id="cardListPenaltyCards"></div>
 
-    <button id="backToEditDeckButton">Tilbake til redigering</button>
+    <div class="bottomActionBar">
+        <button id="backToEditDeckButton">Tilbake til redigering</button>
+    </div>
 </div>
 
-<div id="gameScreen" style="display: none;">
+<div id="gameScreen" class="hasBottomActionBar" style="display: none;">
     <div id="cardText" class="card"></div>
 
     <div id="cardActionButtons">
@@ -169,20 +199,22 @@
         <button id="rejectCardButton">Avvis</button>
     </div>
 
-    <div id="gameMenuArea">
-        <button id="menuButton">Tilbake til meny</button>
+    <div id="gameMenuArea" class="bottomActionBar">
+        <button id="menuButton" class="menuNavigationButton">Tilbake til meny</button>
     </div>
 </div>
 
-<div id="gameSummaryScreen" style="display: none;">
+<div id="gameSummaryScreen" class="hasBottomActionBar" style="display: none;">
     <h1>Alle kort er brukt!</h1>
 
     <p>Du kom gjennom hele kortstokken.</p>
 
     <div id="gameSummaryStats"></div>
 
-    <button id="restartGameButton">Spill igjen</button>
-    <button id="summaryMenuButton">Tilbake til meny</button>
+    <div class="bottomActionBar">
+        <button id="restartGameButton">Spill igjen</button>
+        <button id="summaryMenuButton" class="menuNavigationButton">Tilbake til meny</button>
+    </div>
 </div>
 
     <script src="script.js"></script>

@@ -22,6 +22,8 @@ Players are added on the menu with the button or Enter key. Input is trimmed and
 
 Blank names are ignored. Duplicate names are rejected case-insensitively with `Spilleren eksisterer allerede.` Each listed player can be removed. The player array exists only in page memory and remains populated while moving between screens or returning from a game. A reload clears it.
 
+Text entered in the player-name field but not submitted remains while navigating between the application's screens. A page load or reload clears the unsubmitted field, including when the browser attempts to restore form values.
+
 ## Deck selection
 
 Selecting `Velg spill` requests `GET /api/decks` and creates one button per returned official or custom deck. Choosing a button requests the full deck from `GET /api/decks/:id` and displays:
@@ -30,9 +32,10 @@ Selecting `Velg spill` requests `GET /api/decks` and creates one button per retu
 - description;
 - age rating;
 - inclusive minimum/maximum player range;
+- player-rule description with its stored identifier in parentheses;
 - whether the current registered-player count passes validation.
 
-The status line reflects all range and `playerCountRule` checks, although the displayed range does not explain `exact`, `even`, or `odd` rules.
+The rule line identifies `any`, `exact`, `even`, or `odd`, while the status line reflects all range and `playerCountRule` checks.
 
 If the deck list cannot be loaded, the selection or editor screen displays `Kunne ikke laste kortstokkene` followed by the reported error. Failures while opening deck information, starting a selected deck, or opening a deck for editing are displayed on the screen where the action was initiated.
 
@@ -65,6 +68,10 @@ After every normal card has been accepted or rejected, the game ends automatical
 
 `Tilbake til meny` clears the displayed card, current deck, current card index, counters, and player-selection statistics, then shows the menu. Registered players remain.
 
+Buttons that return directly to the main menu use a consistent secondary navigation color, distinct from primary game and editor actions.
+
+Screens with back, main-menu, save, start, restart, or new-deck actions group the relevant controls in a fixed bottom action bar. A reserved content area, responsive wrapping, and mobile safe-area spacing keep the bar from covering the final fields or list rows.
+
 `Spill igjen` starts the selected deck again with a new shuffle and reset counters. `Tilbake til meny` on the summary returns to the menu. Registered players remain in both cases.
 
 ## Deck editor flow
@@ -73,7 +80,15 @@ The editor list loads the same API deck summaries. Official decks can be opened 
 
 Normal and penalty cards can be imported from separate multiline textareas, with one non-blank line becoming one card. Each import reports how many cards were added. Bulk inputs and their messages are cleared when another or new deck is opened.
 
+On wide screens, deck metadata uses a two-column grid and the normal/penalty card import sections are displayed side by side. The editor collapses to one column on narrow screens while preserving the same field order and functions.
+
+Placeholder insertion controls and their usage explanation are shown in a dedicated full-width player-code section above the normal and penalty card import columns. This keeps the two bulk inputs aligned while allowing placeholders to be inserted into whichever supported text field was focused last.
+
+Description, bulk-entry, normal-card, and penalty-card textareas grow vertically with their content up to a defined maximum. Multiline card fields still save as plain strings in the existing JSON arrays, and users can manually resize textareas vertically when they need additional space.
+
 After a successful save, the UI displays `Kortstokken er lagret på serveren.` If the API returns an error, the editor displays `Kunne ikke lagre kortstokken` followed by the server error and does not show a success message.
+
+If all text is removed from an individual normal-card or penalty-card field, leaving that field removes its empty row from the card list. Saving also filters any remaining blank card values before sending the deck to the API.
 
 ## Known limitations
 
