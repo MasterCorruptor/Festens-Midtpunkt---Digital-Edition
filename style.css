@@ -45,6 +45,23 @@ button:hover {
     background-color: #2563eb;
 }
 
+.menuNavigationButton {
+    background-color: #475569;
+}
+
+.menuNavigationButton:hover {
+    background-color: #334155;
+}
+
+.menuNavigationButton:active {
+    background-color: #1e293b;
+}
+
+.menuNavigationButton:focus-visible {
+    outline: 3px solid #cbd5e1;
+    outline-offset: 3px;
+}
+
 #menuScreen,
 #chooseDeckScreen,
 #deckInfoScreen,
@@ -324,8 +341,8 @@ button:disabled {
 
 #placeholderToolbar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 10px;
 }
 
 #placeholderToolbar button {
@@ -336,8 +353,8 @@ button:disabled {
 #placeholderHelp {
     font-size: 0.9rem;
     color: #bbbbbb;
-    margin-top: 0;
-    margin-bottom: 15px;
+    margin: 0;
+    line-height: 1.5;
 }
 
 #cardActionButtons {
@@ -377,9 +394,186 @@ button:disabled {
     display: none;
 }
 
+#editDeckScreen {
+    width: min(95vw, 1000px);
+    box-sizing: border-box;
+    align-items: stretch;
+}
+
+#editDeckScreen > h1 {
+    text-align: center;
+}
+
+.editorMetadataGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    width: 100%;
+}
+
+.editorFormField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.editorFormField label {
+    font-weight: bold;
+}
+
+.editorFormField input,
+.editorFormField textarea,
+.editorFormField select {
+    width: 100%;
+}
+
+.editorFormFieldFull {
+    grid-column: 1 / -1;
+}
+
+#editDeckDescription {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.autoResizeTextarea {
+    overflow-y: hidden;
+    resize: vertical;
+}
+
+.descriptionTextarea {
+    max-height: 320px;
+}
+
+.bulkTextarea {
+    max-height: 480px;
+}
+
+.placeholderGuideSection {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    padding: 18px 20px;
+    box-sizing: border-box;
+    background-color: #242424;
+    border: 1px solid #3a3a3a;
+    border-radius: 14px;
+}
+
+.placeholderGuideText {
+    min-width: 0;
+}
+
+.placeholderGuideText h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.editorCardSections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+.editorCardSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #242424;
+    border: 1px solid #3a3a3a;
+    border-radius: 14px;
+}
+
+.editorCardSection h2,
+.editorCardSection p {
+    margin-top: 0;
+}
+
+.editorCardSection h2 {
+    margin-bottom: 4px;
+}
+
+.editorCardSection textarea {
+    width: 100%;
+}
+
+.editorSectionMessage {
+    min-height: 1.2em;
+    margin-bottom: 0;
+}
+
+.editorActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.editorActionMessage {
+    flex-basis: 100%;
+    min-height: 1.2em;
+    margin: 0;
+    text-align: center;
+}
+
+.bottomActionBar {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    width: min(calc(100vw - 24px), 900px);
+    padding: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    background-color: rgba(31, 31, 31, 0.96);
+    border: 1px solid #3a3a3a;
+    border-radius: 14px;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.hasBottomActionBar {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+}
+
+#editDeckScreen .bottomActionBar {
+    width: min(calc(100vw - 24px), 1000px);
+}
+
+#chooseDeckScreen .bottomActionBar,
+#deckInfoScreen .bottomActionBar,
+#deckEditorScreen .bottomActionBar,
+#gameScreen .bottomActionBar,
+#gameSummaryScreen .bottomActionBar {
+    width: min(calc(100vw - 24px), 600px);
+}
+
+@media (min-width: 801px) {
+    #editDeckScreen.hasBottomActionBar {
+        padding-bottom: calc(220px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+.bottomActionBar button {
+    flex: 1 1 170px;
+    max-width: 280px;
+}
+
 #bulkCardInput,
 #bulkPenaltyCardInput {
-    width: min(90vw, 700px);
+    width: 100%;
     min-height: 160px;
     resize: vertical;
     font-family: Arial, sans-serif;
@@ -417,6 +611,10 @@ button:disabled {
 #cardListScreen .cardEditorInput {
     width: 100%;
     box-sizing: border-box;
+    min-height: 52px;
+    max-height: 320px;
+    overflow-y: hidden;
+    resize: vertical;
 }
 
 #cardListScreen .removeButton {
@@ -425,4 +623,51 @@ button:disabled {
 
 #backToEditDeckButton {
     align-self: center;
+}
+
+@media (max-width: 800px) {
+    .placeholderGuideSection {
+        grid-template-columns: 1fr;
+    }
+
+    .editorCardSections {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .editorMetadataGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .editorFormFieldFull {
+        grid-column: auto;
+    }
+
+    .editorCardSection {
+        padding: 16px;
+    }
+
+    .editorActions button {
+        width: 100%;
+    }
+
+    .bottomActionBar {
+        padding: 10px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .bottomActionBar button {
+        flex-basis: 100%;
+        max-width: none;
+        width: 100%;
+    }
+
+    .hasBottomActionBar {
+        padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #editDeckScreen.hasBottomActionBar {
+        padding-bottom: calc(280px + env(safe-area-inset-bottom, 0px));
+    }
 }

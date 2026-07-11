@@ -54,7 +54,7 @@ The image installs production and development dependencies together with `npm in
 
 ## Known issues
 
-- Dependency installation uses `npm install` rather than a lockfile-enforcing `npm ci` workflow, and the lockfile is ignored by Git. Reproducibility therefore depends on what files are actually present in the build context and package version resolution.
+- Dependency installation uses `npm install` rather than the lockfile-enforcing `npm ci` command. The lockfile is tracked, but the image build does not require installation to match it exactly.
 - There is no `.dockerignore`, increasing build context size and risking inclusion of development-only files.
 - The server port cannot be configured through the environment.
 - There is no health check.

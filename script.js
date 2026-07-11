@@ -36,6 +36,7 @@ const deckTitle = document.getElementById("deckTitle");
 const deckDescription = document.getElementById("deckDescription");
 const deckAgeRating = document.getElementById("deckAgeRating");
 const deckPlayerCount = document.getElementById("deckPlayerCount");
+const deckPlayerRule = document.getElementById("deckPlayerRule");
 const startSelectedDeckButton = document.getElementById("startSelectedDeckButton");
 const backToMenuButton = document.getElementById("backToMenuButton");
 const deckButtonList = document.getElementById("deckButtonList");
@@ -71,6 +72,15 @@ let penaltyCardsDrawn = 0;
 let playerPickCounts = {};
 let isShowingPenaltyCard = false;
 
+[editDeckDescription, bulkCardInput, bulkPenaltyCardInput].forEach(function (textarea) {
+    initializeAutoResizeTextarea(textarea);
+});
+
+window.addEventListener("pageshow", function () {
+    playerNameInput.value = "";
+    resizeEditorTextareas();
+});
+
 
 async function showDeckInfo(deckId) {
 
@@ -96,6 +106,8 @@ async function showDeckInfo(deckId) {
         deckData.minPlayers +
         " - " +
         deckData.maxPlayers;
+	deckPlayerRule.textContent =
+		"Regel: " + getPlayerCountRuleLabel(deckData.playerCountRule);
 	if (isValidPlayerCount(deckData, players.length)) {
     deckCurrentPlayerStatus.textContent =
         "✓ " + players.length + " spillere registrert";
@@ -286,6 +298,74 @@ function shuffleCards(cards) {
     return cards;
 }
 
+function initializeAutoResizeTextarea(textarea) {
+    textarea.classList.add("autoResizeTextarea");
+
+    textarea.addEventListener("input", function () {
+        autoResizeTextarea(textarea);
+    });
+
+    textarea.addEventListener("pointerdown", function () {
+        textarea.dataset.resizeStartHeight = String(textarea.offsetHeight);
+    });
+
+    textarea.addEventListener("pointerup", function () {
+        const startHeight = Number(textarea.dataset.resizeStartHeight);
+        const currentHeight = textarea.offsetHeight;
+
+        if (Math.abs(currentHeight - startHeight) > 2) {
+            textarea.dataset.userMinHeight = String(currentHeight);
+            autoResizeTextarea(textarea);
+        }
+    });
+
+    requestAnimationFrame(function () {
+        autoResizeTextarea(textarea);
+    });
+}
+
+function autoResizeTextarea(textarea) {
+    const computedStyle = window.getComputedStyle(textarea);
+    const minimumHeight = parseFloat(computedStyle.minHeight) || 0;
+    const maximumHeight = parseFloat(computedStyle.maxHeight);
+    const userMinimumHeight = Number(textarea.dataset.userMinHeight) || 0;
+    const borderHeight =
+        (parseFloat(computedStyle.borderTopWidth) || 0) +
+        (parseFloat(computedStyle.borderBottomWidth) || 0);
+
+    textarea.style.height = "auto";
+
+    const contentHeight = textarea.scrollHeight + borderHeight;
+    let targetHeight = Math.max(minimumHeight, userMinimumHeight, contentHeight);
+
+    if (Number.isFinite(maximumHeight)) {
+        targetHeight = Math.min(targetHeight, maximumHeight);
+    }
+
+    textarea.style.height = targetHeight + "px";
+    textarea.style.overflowY =
+        Number.isFinite(maximumHeight) && contentHeight > maximumHeight
+            ? "auto"
+            : "hidden";
+}
+
+function resetTextareaSize(textarea) {
+    delete textarea.dataset.userMinHeight;
+    delete textarea.dataset.resizeStartHeight;
+    textarea.style.height = "";
+    autoResizeTextarea(textarea);
+}
+
+function resizeEditorTextareas() {
+    const textareas = document.querySelectorAll(
+        "#editDeckScreen textarea, #cardListScreen textarea"
+    );
+
+    textareas.forEach(function (textarea) {
+        autoResizeTextarea(textarea);
+    });
+}
+
 function showNextCard() {
     rejectCardButton.style.display = "inline-block";
 	isShowingPenaltyCard = false;
@@ -438,6 +518,17 @@ function isValidPlayerCount(deck, playerCount) {
     return true;
 }
 
+function getPlayerCountRuleLabel(playerCountRule) {
+    const ruleLabels = {
+        any: "Opp til maks spillere (any)",
+        exact: "Akkurat samme som min og maks dersom de er like (exact)",
+        even: "Må være partall med spillere (even)",
+        odd: "Må være oddetall med spillere (odd)"
+    };
+
+    return ruleLabels[playerCountRule] || playerCountRule;
+}
+
 function formatPlayerName(name) {
 
     return name
@@ -551,11 +642,14 @@ async function openDeckForEditing(deck) {
     editDeckMinPlayers.value = deckData.minPlayers;
     editDeckMaxPlayers.value = deckData.maxPlayers;
     editDeckPlayerCountRule.value = deckData.playerCountRule;
+	resetTextareaSize(editDeckDescription);
 
     editDeckCardList.innerHTML = "";
 	editDeckPenaltyCardList.innerHTML = "";
 	bulkCardInput.value = "";
 	bulkPenaltyCardInput.value = "";
+	resetTextareaSize(bulkCardInput);
+	resetTextareaSize(bulkPenaltyCardInput);
 	bulkCardMessage.textContent = "";
 	bulkPenaltyCardMessage.textContent = "";
 
@@ -590,16 +684,27 @@ function createCardEditorRow(cardText) {
     const cardRow = document.createElement("div");
     cardRow.classList.add("cardEditorRow");
 
-    const cardInput = document.createElement("input");
-    cardInput.type = "text";
+    const cardInput = document.createElement("textarea");
+    cardInput.rows = 1;
     cardInput.value = cardText;
     cardInput.classList.add("cardEditorInput");
+	initializeAutoResizeTextarea(cardInput);
 	cardInput.addEventListener("focus", function () {
 		activeCardInput = cardInput;
 	});
 
 	cardInput.addEventListener("click", function () {
 		activeCardInput = cardInput;
+	});
+
+	cardInput.addEventListener("blur", function () {
+		if (cardInput.value.trim() === "") {
+			cardRow.remove();
+
+			if (activeCardInput === cardInput) {
+				activeCardInput = null;
+			}
+		}
 	});
 
     const removeCardButton = document.createElement("button");
@@ -639,6 +744,7 @@ addBulkCardsButton.addEventListener("click", function () {
     });
 
     bulkCardInput.value = "";
+	autoResizeTextarea(bulkCardInput);
 	bulkCardMessage.textContent = addedCards + " kort lagt til.";
 });
 
@@ -657,6 +763,7 @@ addBulkPenaltyCardsButton.addEventListener("click", function () {
     });
 
     bulkPenaltyCardInput.value = "";
+    autoResizeTextarea(bulkPenaltyCardInput);
     bulkPenaltyCardMessage.textContent = addedCards + " straffekort lagt til.";
 });
 
@@ -743,11 +850,14 @@ function openNewDeckEditor() {
     editDeckMinPlayers.value = 2;
     editDeckMaxPlayers.value = 10;
     editDeckPlayerCountRule.value = "any";
+	resetTextareaSize(editDeckDescription);
 
     editDeckCardList.innerHTML = "";
     editDeckPenaltyCardList.innerHTML = "";
     bulkCardInput.value = "";
     bulkPenaltyCardInput.value = "";
+    resetTextareaSize(bulkCardInput);
+    resetTextareaSize(bulkPenaltyCardInput);
     bulkCardMessage.textContent = "";
     bulkPenaltyCardMessage.textContent = "";
     saveDeckMessage.textContent = "";
@@ -906,6 +1016,10 @@ function insertPlaceholder(inputElement, placeholderText) {
 
     inputElement.focus();
     inputElement.setSelectionRange(newCursorPosition, newCursorPosition);
+
+    if (inputElement instanceof HTMLTextAreaElement) {
+        autoResizeTextarea(inputElement);
+    }
 }
 
 function showCardListEditor() {
@@ -925,6 +1039,10 @@ function showCardListEditor() {
     });
 
     showScreen(cardListScreen);
+
+    requestAnimationFrame(function () {
+        resizeEditorTextareas();
+    });
 }
 
 showCardListButton.addEventListener("click", function () {
