@@ -1,8 +1,8 @@
 const menuScreen = document.getElementById("menuScreen");
 const gameScreen = document.getElementById("gameScreen");
-
 const menuButton = document.getElementById("menuButton");
-
+const acceptCardButton = document.getElementById("acceptCardButton");
+const rejectCardButton = document.getElementById("rejectCardButton");
 const cardText = document.getElementById("cardText");
 const playerNameInput = document.getElementById("playerNameInput");
 const addPlayerButton = document.getElementById("addPlayerButton");
@@ -17,49 +17,74 @@ const newDeckButton = document.getElementById("newDeckButton");
 const backFromEditorButton = document.getElementById("backFromEditorButton");
 const deckEditorMessage = document.getElementById("deckEditorMessage");
 const editDeckScreen = document.getElementById("editDeckScreen");
-
 const editDeckName = document.getElementById("editDeckName");
 const editDeckDescription = document.getElementById("editDeckDescription");
 const editDeckAgeRating = document.getElementById("editDeckAgeRating");
 const editDeckMinPlayers = document.getElementById("editDeckMinPlayers");
 const editDeckMaxPlayers = document.getElementById("editDeckMaxPlayers");
 const editDeckPlayerCountRule = document.getElementById("editDeckPlayerCountRule");
-
 const editDeckCardList = document.getElementById("editDeckCardList");
+const editDeckPenaltyCardList = document.getElementById("editDeckPenaltyCardList");
 const backToDeckEditorButton = document.getElementById("backToDeckEditorButton");
-
-const addCardToDeckButton = document.getElementById("addCardToDeckButton");
 const saveDeckButton = document.getElementById("saveDeckButton");
 const saveDeckMessage = document.getElementById("saveDeckMessage");
-
 const chooseDeckButton = document.getElementById("chooseDeckButton");
 const chooseDeckScreen = document.getElementById("chooseDeckScreen");
-
 const backFromChooseDeckButton = document.getElementById("backFromChooseDeckButton");
-
 const deckInfoScreen = document.getElementById("deckInfoScreen");
-
 const deckTitle = document.getElementById("deckTitle");
 const deckDescription = document.getElementById("deckDescription");
 const deckAgeRating = document.getElementById("deckAgeRating");
 const deckPlayerCount = document.getElementById("deckPlayerCount");
-
 const startSelectedDeckButton = document.getElementById("startSelectedDeckButton");
 const backToMenuButton = document.getElementById("backToMenuButton");
-
 const deckButtonList = document.getElementById("deckButtonList");
+const chooseDeckError = document.getElementById("chooseDeckError");
+const insertPlayerButton = document.getElementById("insertPlayerButton");
+const insertPlayer1Button = document.getElementById("insertPlayer1Button");
+const insertPlayer2Button = document.getElementById("insertPlayer2Button");
+const gameSummaryScreen = document.getElementById("gameSummaryScreen");
+const gameSummaryStats = document.getElementById("gameSummaryStats");
+const restartGameButton = document.getElementById("restartGameButton");
+const summaryMenuButton = document.getElementById("summaryMenuButton");
+const bulkCardInput = document.getElementById("bulkCardInput");
+const addBulkCardsButton = document.getElementById("addBulkCardsButton");
+const bulkCardMessage = document.getElementById("bulkCardMessage");
+const cardListScreen = document.getElementById("cardListScreen");
+const cardListNormalCards = document.getElementById("cardListNormalCards");
+const cardListPenaltyCards = document.getElementById("cardListPenaltyCards");
+const backToEditDeckButton = document.getElementById("backToEditDeckButton");
+const showCardListButton = document.getElementById("showCardListButton");
+const bulkPenaltyCardInput = document.getElementById("bulkPenaltyCardInput");
+const addBulkPenaltyCardsButton = document.getElementById("addBulkPenaltyCardsButton");
+const bulkPenaltyCardMessage = document.getElementById("bulkPenaltyCardMessage");
 
 let players = [];
 let currentDeck = null;
 let currentCardIndex = 0;
-let recentCards = [];
 let selectedDeckId = null;
 let deckBeingEdited = null;
+let activeCardInput = null;
+let acceptedCards = 0;
+let rejectedCards = 0;
+let penaltyCardsDrawn = 0;
+let playerPickCounts = {};
+let isShowingPenaltyCard = false;
 
 
 async function showDeckInfo(deckId) {
 
-	const deckData = await getDeckById(deckId);
+	chooseDeckError.textContent = "";
+
+	let deckData;
+
+	try {
+		deckData = await getDeckById(deckId);
+	} catch (error) {
+		chooseDeckError.textContent =
+			"Kunne ikke laste kortstokken: " + error.message;
+		return;
+	}
 
     selectedDeckId = deckId;
 
@@ -96,27 +121,56 @@ backToMenuButton.addEventListener("click", function () {
 
 async function startDeck(deckId) {
     playerError.textContent = "";
+	deckError.textContent = "";
 
-	currentDeck = await getDeckById(deckId);
+	try {
+		currentDeck = await getDeckById(deckId);
+	} catch (error) {
+		deckError.textContent =
+			"Kunne ikke starte spillet: " + error.message;
+		return;
+	}
 
     if (!isValidPlayerCount(currentDeck, players.length)) {
         deckError.textContent = "Antall spillere passer ikke for denne kortstokken.";
         return;
     }
 
+    if (!Array.isArray(currentDeck.cards) || currentDeck.cards.length === 0) {
+        deckError.textContent = "Kortstokken inneholder ingen kort.";
+        return;
+    }
+
     currentDeck.cards = shuffleCards(currentDeck.cards);
     currentCardIndex = 0;
+	acceptedCards = 0;
+	rejectedCards = 0;
+	penaltyCardsDrawn = 0;
+	playerPickCounts = {};
+	isShowingPenaltyCard = false;
 
     menuScreen.style.display = "none";
     deckInfoScreen.style.display = "none";
+	gameSummaryScreen.style.display = "none";
     gameScreen.style.display = "flex";
 
     cardText.textContent = prepareCardText(currentDeck.cards[currentCardIndex]);
-    recentCards = [currentDeck.cards[currentCardIndex]];
 }
 
-cardText.addEventListener("click", function () {
+restartGameButton.addEventListener("click", function () {
+    startDeck(selectedDeckId);
+});
+
+acceptCardButton.addEventListener("click", function () {
+    if (!isShowingPenaltyCard) {
+        acceptedCards++;
+    }
+
     showNextCard();
+});
+
+rejectCardButton.addEventListener("click", function () {
+    showPenaltyCard();
 });
 
 menuButton.addEventListener("click", function () {
@@ -126,6 +180,26 @@ menuButton.addEventListener("click", function () {
     cardText.textContent = "";
     currentDeck = null;
     currentCardIndex = 0;
+
+    acceptedCards = 0;
+    rejectedCards = 0;
+    penaltyCardsDrawn = 0;
+    playerPickCounts = {};
+    isShowingPenaltyCard = false;
+});
+
+summaryMenuButton.addEventListener("click", function () {
+    gameSummaryScreen.style.display = "none";
+    menuScreen.style.display = "flex";
+
+    cardText.textContent = "";
+    currentDeck = null;
+    currentCardIndex = 0;
+
+    acceptedCards = 0;
+    rejectedCards = 0;
+    penaltyCardsDrawn = 0;
+    isShowingPenaltyCard = false;
 });
 
 function addPlayer() {
@@ -213,33 +287,79 @@ function shuffleCards(cards) {
 }
 
 function showNextCard() {
-    currentCardIndex++;
+    rejectCardButton.style.display = "inline-block";
+	isShowingPenaltyCard = false;
+
+	currentCardIndex++;
 
     if (currentCardIndex >= currentDeck.cards.length) {
-        currentDeck.cards = shuffleCards(currentDeck.cards);
 
-        let attempts = 0;
+	const topPlayers = Object.entries(playerPickCounts)
+			.sort(function(a, b) {
+			return b[1] - a[1];
+		})
+		.slice(0, 3);
 
-        while (
-            recentCards.includes(currentDeck.cards[0]) &&
-            attempts < 20
-        ) {
-            currentDeck.cards = shuffleCards(currentDeck.cards);
-            attempts++;
-        }
+	gameSummaryStats.replaceChildren();
 
-        currentCardIndex = 0;
-    }
+	const acceptedCardsText = document.createElement("p");
+	acceptedCardsText.textContent = "Godkjente kort: " + acceptedCards;
+	gameSummaryStats.appendChild(acceptedCardsText);
+
+	const penaltyCardsText = document.createElement("p");
+	penaltyCardsText.textContent = "Straffekort trukket: " + penaltyCardsDrawn;
+	gameSummaryStats.appendChild(penaltyCardsText);
+
+	const rejectedCardsText = document.createElement("p");
+	rejectedCardsText.textContent = "Avviste kort: " + rejectedCards;
+	gameSummaryStats.insertBefore(rejectedCardsText, penaltyCardsText);
+
+	const topPlayersTitle = document.createElement("h3");
+	topPlayersTitle.textContent = "Mest valgte spillere";
+	gameSummaryStats.appendChild(topPlayersTitle);
+
+	topPlayers.forEach(function(player, index) {
+		const medals = ["🥇", "🥈", "🥉"];
+		const playerText = document.createElement("p");
+
+		playerText.textContent =
+			medals[index] +
+			" " +
+			player[0] +
+			" - " +
+			player[1] +
+			" ganger";
+
+		gameSummaryStats.appendChild(playerText);
+	});
+
+		gameScreen.style.display = "none";
+		gameSummaryScreen.style.display = "flex";
+
+		return;
+	}
 
     const nextCard = currentDeck.cards[currentCardIndex];
 
     cardText.textContent = prepareCardText(nextCard);
+}
 
-    recentCards.push(nextCard);
+function showPenaltyCard() {
+    rejectCardButton.style.display = "none";
+	isShowingPenaltyCard = true;
+	rejectedCards++;
 
-    if (recentCards.length > 2) {
-        recentCards.shift();
+    if (!currentDeck.penaltyCards || currentDeck.penaltyCards.length === 0) {
+        cardText.textContent = "Ingen straffekort er lagt inn i denne kortstokken.";
+        return;
     }
+
+    penaltyCardsDrawn++;
+
+    const randomIndex = Math.floor(Math.random() * currentDeck.penaltyCards.length);
+    const penaltyCard = currentDeck.penaltyCards[randomIndex];
+
+    cardText.textContent = prepareCardText(penaltyCard);
 }
 
 function prepareCardText(cardText) {
@@ -259,9 +379,11 @@ function prepareCardText(cardText) {
             return "{player}";
         }
 
-        playerIndex++;
+		playerIndex++;
 
-        return playerName;
+		countPlayerPick(playerName);
+
+		return playerName;
     });
 
     const numberedPlaceholders = preparedText.match(/\{player\d+\}/g);
@@ -276,11 +398,20 @@ function prepareCardText(cardText) {
         const playerName = shuffledPlayers[index];
 
         if (playerName !== undefined) {
-            preparedText = preparedText.replaceAll(placeholder, playerName);
-        }
+			countPlayerPick(playerName);
+			preparedText = preparedText.replaceAll(placeholder, playerName);
+		}
     });
 
     return preparedText;
+}
+
+function countPlayerPick(playerName) {
+    if (!playerPickCounts[playerName]) {
+        playerPickCounts[playerName] = 0;
+    }
+
+    playerPickCounts[playerName]++;
 }
 
 function isValidPlayerCount(deck, playerCount) {
@@ -328,8 +459,17 @@ function formatPlayerName(name) {
 
 async function showDeckEditorList() {
     deckEditorList.innerHTML = "";
+	deckEditorMessage.textContent = "";
 
-	const deckList = await getDeckList();
+	let deckList;
+
+	try {
+		deckList = await getDeckList();
+	} catch (error) {
+		deckEditorMessage.textContent =
+			"Kunne ikke laste kortstokkene: " + error.message;
+		return;
+	}
 
 	deckList.forEach(function (deck) {
         const deckRow = document.createElement("div");
@@ -341,26 +481,40 @@ async function showDeckEditorList() {
         const editButton = document.createElement("button");
         editButton.textContent = "Rediger";
         editButton.classList.add("removeButton");
-		
+
 		editButton.addEventListener("click", function () {
 			openDeckForEditing(deck);
 		});
-		
+
 		if (deck.type === "official") {
-			editButton.disabled = true;
+			editButton.disabled = false;
 		}
-		
+
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Slett";
         deleteButton.classList.add("removeButton");
-		
+
 		deleteButton.addEventListener("click", async function () {
+			const shouldDelete = window.confirm(
+				"Vil du slette kortstokken \"" + deck.name + "\"?"
+			);
 
-			await deleteDeckData(deck.id);
+			if (!shouldDelete) {
+				return;
+			}
 
-			showDeckEditorList();
+			deckEditorMessage.textContent = "";
+
+			try {
+				await deleteDeckData(deck.id);
+				await showDeckEditorList();
+				deckEditorMessage.textContent = "Kortstokken er slettet.";
+			} catch (error) {
+				deckEditorMessage.textContent =
+					"Kunne ikke slette kortstokken: " + error.message;
+			}
 		});
-		
+
 		if (deck.type === "official") {
 			deleteButton.disabled = true;
 		}
@@ -374,7 +528,17 @@ async function showDeckEditorList() {
 }
 
 async function openDeckForEditing(deck) {
-	const deckData = await getDeckById(deck.id);
+	deckEditorMessage.textContent = "";
+
+	let deckData;
+
+	try {
+		deckData = await getDeckById(deck.id);
+	} catch (error) {
+		deckEditorMessage.textContent =
+			"Kunne ikke åpne kortstokken: " + error.message;
+		return;
+	}
 
     deckBeingEdited = {
     ...deckData,
@@ -389,13 +553,27 @@ async function openDeckForEditing(deck) {
     editDeckPlayerCountRule.value = deckData.playerCountRule;
 
     editDeckCardList.innerHTML = "";
+	editDeckPenaltyCardList.innerHTML = "";
+	bulkCardInput.value = "";
+	bulkPenaltyCardInput.value = "";
+	bulkCardMessage.textContent = "";
+	bulkPenaltyCardMessage.textContent = "";
 
-    deckData.cards.forEach(function (card) {
+	deckData.cards.forEach(function(card) {
 
 		const cardRow = createCardEditorRow(card);
 
 		editDeckCardList.appendChild(cardRow);
 	});
+
+	if (deckData.penaltyCards) {
+		deckData.penaltyCards.forEach(function(card) {
+
+			const cardRow = createCardEditorRow(card);
+
+			editDeckPenaltyCardList.appendChild(cardRow);
+		});
+	}
 
     deckEditorScreen.style.display = "none";
     editDeckScreen.style.display = "flex";
@@ -416,6 +594,13 @@ function createCardEditorRow(cardText) {
     cardInput.type = "text";
     cardInput.value = cardText;
     cardInput.classList.add("cardEditorInput");
+	cardInput.addEventListener("focus", function () {
+		activeCardInput = cardInput;
+	});
+
+	cardInput.addEventListener("click", function () {
+		activeCardInput = cardInput;
+	});
 
     const removeCardButton = document.createElement("button");
     removeCardButton.textContent = "Fjern";
@@ -431,14 +616,54 @@ function createCardEditorRow(cardText) {
     return cardRow;
 }
 
-addCardToDeckButton.addEventListener("click", function () {
-    const cardRow = createCardEditorRow("");
+bulkCardInput.addEventListener("focus", function () {
+    activeCardInput = bulkCardInput;
+});
 
-    editDeckCardList.appendChild(cardRow);
+bulkCardInput.addEventListener("click", function () {
+    activeCardInput = bulkCardInput;
+});
+
+addBulkCardsButton.addEventListener("click", function () {
+    const cardLines = bulkCardInput.value.split("\n");
+	let addedCards = 0;
+
+    cardLines.forEach(function(cardText) {
+        const trimmedCardText = cardText.trim();
+
+        if (trimmedCardText !== "") {
+            const cardRow = createCardEditorRow(trimmedCardText);
+            editDeckCardList.appendChild(cardRow);
+			addedCards++;
+        }
+    });
+
+    bulkCardInput.value = "";
+	bulkCardMessage.textContent = addedCards + " kort lagt til.";
+});
+
+addBulkPenaltyCardsButton.addEventListener("click", function () {
+    const cardLines = bulkPenaltyCardInput.value.split("\n");
+    let addedCards = 0;
+
+    cardLines.forEach(function(cardText) {
+        const trimmedCardText = cardText.trim();
+
+        if (trimmedCardText !== "") {
+            const cardRow = createCardEditorRow(trimmedCardText);
+            editDeckPenaltyCardList.appendChild(cardRow);
+            addedCards++;
+        }
+    });
+
+    bulkPenaltyCardInput.value = "";
+    bulkPenaltyCardMessage.textContent = addedCards + " straffekort lagt til.";
 });
 
 saveDeckButton.addEventListener("click", async function () {
-    const cardInputs = editDeckCardList.querySelectorAll(".cardEditorInput");
+	returnToDeckEditor();
+
+    const cardInputs = document.querySelectorAll("#editDeckCardList .cardEditorInput");
 
     const cards = [];
 
@@ -450,6 +675,18 @@ saveDeckButton.addEventListener("click", async function () {
         }
     });
 
+const penaltyCardInputs = document.querySelectorAll("#editDeckPenaltyCardList .cardEditorInput");
+
+const penaltyCards = [];
+
+penaltyCardInputs.forEach(function (input) {
+    const cardText = input.value.trim();
+
+    if (cardText !== "") {
+        penaltyCards.push(cardText);
+    }
+});
+
     const updatedDeck = {
         id: deckBeingEdited.id === "ny_kortstokk"
             ? createDeckId(editDeckName.value.trim())
@@ -460,22 +697,32 @@ saveDeckButton.addEventListener("click", async function () {
         maxPlayers: Number(editDeckMaxPlayers.value),
         ageRating: editDeckAgeRating.value.trim(),
         playerCountRule: editDeckPlayerCountRule.value,
-        cards: cards
+        cards: cards,
+		penaltyCards: penaltyCards
     };
 
-    const savedDeck = await saveDeckData(updatedDeck);
-    // updateLocalDeckList(updatedDeck);
+    saveDeckMessage.textContent = "";
 
-    deckBeingEdited = updatedDeck;
-    console.log(updatedDeck);
+    try {
+        const savedDeck = await saveDeckData(updatedDeck);
 
-    saveDeckMessage.textContent =
-        "Kortstokken er lagret lokalt.";
+        deckBeingEdited = savedDeck;
+        saveDeckMessage.textContent = "Kortstokken er lagret på serveren.";
+    } catch (error) {
+        saveDeckMessage.textContent =
+            "Kunne ikke lagre kortstokken: " + error.message;
+    }
 });
 
 async function getDeckById(deckId) {
     const response = await fetch("/api/decks/" + deckId);
-    return await response.json();
+    const responseData = await response.json();
+
+    if (!response.ok) {
+        throw new Error(responseData.error || "Ukjent serverfeil");
+    }
+
+    return responseData;
 }
 
 function openNewDeckEditor() {
@@ -498,6 +745,11 @@ function openNewDeckEditor() {
     editDeckPlayerCountRule.value = "any";
 
     editDeckCardList.innerHTML = "";
+    editDeckPenaltyCardList.innerHTML = "";
+    bulkCardInput.value = "";
+    bulkPenaltyCardInput.value = "";
+    bulkCardMessage.textContent = "";
+    bulkPenaltyCardMessage.textContent = "";
     saveDeckMessage.textContent = "";
 
     deckEditorScreen.style.display = "none";
@@ -526,8 +778,19 @@ backFromChooseDeckButton.addEventListener("click", function () {
 
 async function showChooseDeckList() {
     deckButtonList.innerHTML = "";
+	chooseDeckError.textContent = "";
 
-    const deckList = await getDeckList();
+    let deckList;
+
+    try {
+        deckList = await getDeckList();
+    } catch (error) {
+        const errorMessage = document.createElement("p");
+        errorMessage.textContent =
+            "Kunne ikke laste kortstokkene: " + error.message;
+        deckButtonList.appendChild(errorMessage);
+        return;
+    }
 
     deckList.forEach(function (deck) {
         const deckButton = document.createElement("button");
@@ -548,6 +811,8 @@ function showScreen(screenToShow) {
     deckEditorScreen.style.display = "none";
     editDeckScreen.style.display = "none";
     gameScreen.style.display = "none";
+	gameSummaryScreen.style.display = "none";
+	cardListScreen.style.display = "none";
 
     screenToShow.style.display = "flex";
 }
@@ -573,7 +838,13 @@ async function saveDeckData(deck) {
         body: JSON.stringify(deck)
     });
 
-    return await response.json();
+    const responseData = await response.json();
+
+    if (!response.ok) {
+        throw new Error(responseData.error || "Ukjent serverfeil");
+    }
+
+    return responseData;
 }
 
 async function deleteDeckData(deckId) {
@@ -584,10 +855,106 @@ async function deleteDeckData(deckId) {
         }
     );
 
-    return await response.json();
+    const responseData = await response.json();
+
+    if (!response.ok) {
+        throw new Error(responseData.error || "Ukjent serverfeil");
+    }
+
+    return responseData;
 }
 
 async function getDeckList() {
     const response = await fetch("/api/decks");
-    return await response.json();
+    const responseData = await response.json();
+
+    if (!response.ok) {
+        throw new Error(responseData.error || "Ukjent serverfeil");
+    }
+
+    return responseData;
 }
+
+insertPlayerButton.addEventListener("click", function () {
+    if (activeCardInput !== null) {
+        insertPlaceholder(activeCardInput, "{player}");
+    }
+});
+
+insertPlayer1Button.addEventListener("click", function () {
+    if (activeCardInput !== null) {
+        insertPlaceholder(activeCardInput, "{player1}");
+    }
+});
+
+insertPlayer2Button.addEventListener("click", function () {
+    if (activeCardInput !== null) {
+        insertPlaceholder(activeCardInput, "{player2}");
+    }
+});
+
+function insertPlaceholder(inputElement, placeholderText) {
+    const start = inputElement.selectionStart;
+    const end = inputElement.selectionEnd;
+
+    const beforeText = inputElement.value.substring(0, start);
+    const afterText = inputElement.value.substring(end);
+
+    inputElement.value = beforeText + placeholderText + afterText;
+
+    const newCursorPosition = start + placeholderText.length;
+
+    inputElement.focus();
+    inputElement.setSelectionRange(newCursorPosition, newCursorPosition);
+}
+
+function showCardListEditor() {
+    cardListNormalCards.innerHTML = "";
+    cardListPenaltyCards.innerHTML = "";
+
+    const normalCardRows = editDeckCardList.querySelectorAll(".cardEditorRow");
+
+    normalCardRows.forEach(function(row) {
+        cardListNormalCards.appendChild(row);
+    });
+
+    const penaltyCardRows = editDeckPenaltyCardList.querySelectorAll(".cardEditorRow");
+
+    penaltyCardRows.forEach(function(row) {
+        cardListPenaltyCards.appendChild(row);
+    });
+
+    showScreen(cardListScreen);
+}
+
+showCardListButton.addEventListener("click", function () {
+    showCardListEditor();
+});
+
+function returnToDeckEditor() {
+    const normalCardRows = cardListNormalCards.querySelectorAll(".cardEditorRow");
+
+    normalCardRows.forEach(function(row) {
+        editDeckCardList.appendChild(row);
+    });
+
+    const penaltyCardRows = cardListPenaltyCards.querySelectorAll(".cardEditorRow");
+
+    penaltyCardRows.forEach(function(row) {
+        editDeckPenaltyCardList.appendChild(row);
+    });
+
+    showScreen(editDeckScreen);
+}
+
+backToEditDeckButton.addEventListener("click", function () {
+    returnToDeckEditor();
+});
+
+bulkPenaltyCardInput.addEventListener("focus", function () {
+    activeCardInput = bulkPenaltyCardInput;
+});
+
+bulkPenaltyCardInput.addEventListener("click", function () {
+    activeCardInput = bulkPenaltyCardInput;
+});

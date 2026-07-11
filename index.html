@@ -4,13 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Festens midtpunkt</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="menuScreen">
-    <h1>Festens midtpunkt</h1>
+    <div class="heroLogo">
+		<div class="cardFan">
+			<span class="miniCard">♣</span>
+			<span class="miniCard centerCard">★</span>
+			<span class="miniCard">♥</span>
+		</div>
+
+		<div class="curvedTitle">
+			<span>FESTENS</span>
+			<span>MIDTPUNKT</span>
+		</div>
+	</div>
 
     <button id="chooseDeckButton">Velg spill</button>
 
@@ -36,6 +46,8 @@
 
     <div id="deckButtonList"></div>
 
+    <p id="chooseDeckError"></p>
+
     <button id="backFromChooseDeckButton">
         Tilbake til meny
     </button>
@@ -49,13 +61,13 @@
     <p id="deckAgeRating"></p>
     <p id="deckPlayerCount"></p>
 	<p id="deckCurrentPlayerStatus"></p>
-	
+
 	<p id="deckError"></p>
 
     <button id="startSelectedDeckButton">Start spill</button>
     <button id="backToMenuButton">Tilbake til meny</button>
 </div>
-	
+
 <div id="deckEditorScreen" style="display: none;">
     <h1>Rediger kortstokker</h1>
 
@@ -63,11 +75,11 @@
 
     <button id="newDeckButton">Ny kortstokk</button>
     <button id="backFromEditorButton">Tilbake til meny</button>
-	
+
 	<p id="deckEditorMessage"></p>
-	
+
 </div>
-	
+
 <div id="editDeckScreen" style="display: none;">
     <h1>Rediger kortstokk</h1>
 
@@ -88,29 +100,89 @@
 
     <label>Regel</label>
     <select id="editDeckPlayerCountRule">
-        <option value="any">any</option>
-        <option value="exact">exact</option>
-        <option value="even">even</option>
-        <option value="odd">odd</option>
+        <option value="any">Opp til maks spillere</option>
+        <option value="exact">Akkurat samme som min og maks dersom de er like</option>
+        <option value="even">Må være partall med spillere</option>
+        <option value="odd">Må være oddetall med spillere</option>
     </select>
 
-    <h2>Kort</h2>
-    <div id="editDeckCardList"></div>
-	
-	<button id="addCardToDeckButton">Legg til kort</button>
+	<h2>Kort</h2>
+
+    <div id="placeholderToolbar">
+		<button id="insertPlayerButton">{player}</button>
+		<button id="insertPlayer1Button">{player1}</button>
+		<button id="insertPlayer2Button">{player2}</button>
+	</div>
+
+	<p id="placeholderHelp">
+    {player} = velger én eller flere tilfeldig spillere<br>
+    {player1} + {player2} = velger to forskjellige spillere og beholder samme navn dersom det brukes flere ganger i en tekst.
+	</p>
+
+	<div id="editDeckCardList"></div>
+
+	<textarea id="bulkCardInput" placeholder="Lim inn flere kort her. Én linje blir ett kort."></textarea>
+	<button id="addBulkCardsButton">
+		Legg til flere kort
+	</button>
+	<p id="bulkCardMessage"></p>
+
+	<h2>Straffekort</h2>
+	<textarea
+		id="bulkPenaltyCardInput"
+		placeholder="Lim inn flere straffekort her. Én linje blir ett straffekort."
+	></textarea>
+
+	<button id="addBulkPenaltyCardsButton">
+		Legg til flere straffekort
+	</button>
+	<p id="bulkPenaltyCardMessage"></p>
+
+	<div id="editDeckPenaltyCardList"></div>
+
+	<button id="showCardListButton">Vis kortliste</button>
 
 	<button id="saveDeckButton">Lagre kortstokk</button>
 
 	<button id="backToDeckEditorButton">Tilbake</button>
 
 	<p id="saveDeckMessage"></p>
+	</div>
+
+<div id="cardListScreen" style="display: none;">
+    <h1>Kortliste</h1>
+
+    <h2>Vanlige kort</h2>
+    <div id="cardListNormalCards"></div>
+
+    <h2>Straffekort</h2>
+    <div id="cardListPenaltyCards"></div>
+
+    <button id="backToEditDeckButton">Tilbake til redigering</button>
 </div>
-		
+
 <div id="gameScreen" style="display: none;">
-        <div id="cardText" class="card">
-		Dette er det første kortet.
-		</div>
+    <div id="cardText" class="card"></div>
+
+    <div id="cardActionButtons">
+        <button id="acceptCardButton">Godta</button>
+        <button id="rejectCardButton">Avvis</button>
+    </div>
+
+    <div id="gameMenuArea">
         <button id="menuButton">Tilbake til meny</button>
+    </div>
+</div>
+
+<div id="gameSummaryScreen" style="display: none;">
+    <h1>Alle kort er brukt!</h1>
+
+    <p>Du kom gjennom hele kortstokken.</p>
+
+    <div id="gameSummaryStats"></div>
+
+    <button id="restartGameButton">Spill igjen</button>
+    <button id="summaryMenuButton">Tilbake til meny</button>
 </div>
 
     <script src="script.js"></script>
