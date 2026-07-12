@@ -2,7 +2,7 @@
 
 Festens Midtpunkt er en selvhostet nettapplikasjon for digitale selskaps- og kortspill. Applikasjonen støtter offisielle og egendefinerte kortstokker, spillere, plassholdere, straffekort og redigering direkte i nettleseren.
 
-Nåværende versjon: **v0.6.0**
+Nåværende versjon: **v0.7.0**
 
 ## Nåværende funksjonalitet
 
