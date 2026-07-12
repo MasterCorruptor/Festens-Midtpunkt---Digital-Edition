@@ -7,10 +7,11 @@ The root file is named `dockerfile` and contains a single-stage image definition
 1. Start from `node:24-alpine`.
 2. Set `/app` as the work directory.
 3. Copy `server/package*.json` to `/app/server/`.
-4. Run `npm install` in `/app/server`.
+4. Run `npm ci --omit=dev` in `/app/server`, requiring the tracked lockfile to match `package.json`.
 5. Copy the repository into `/app`.
 6. Document container port `3000` with `EXPOSE`.
-7. Start `node server/server.js`.
+7. Define a health check that requests `/api/decks` on the configured internal port.
+8. Start `node server/server.js`.
 
 The application server serves both static files and the API from the same process and port.
 
@@ -21,6 +22,7 @@ The application server serves both static files and the API from the same proces
 - builds from the repository root;
 - assigns container name `festens_midtpunkt`;
 - uses restart policy `unless-stopped`;
+- sets the internal `PORT` environment variable to `3000`;
 - maps host `30050` to container `3000`;
 - bind-mounts host `./server/data` at `/app/server/data`.
 
@@ -40,24 +42,20 @@ This is a bind mount, not a Docker-managed named volume. Host permissions and th
 | Docker Compose | `http://localhost:30050` | `3000` in container |
 | Bare `docker run` | Depends on explicit `-p` mapping | `3000` in container |
 
-The port is hard-coded in `server/server.js`; there is no environment-variable override.
+The server reads the `PORT` environment variable and accepts integer ports from `1` through `65535`. Missing or invalid values fall back to `3000`. Compose explicitly retains `3000` inside the container.
 
 ## Local development
 
 From `server/`, dependencies are described by `package.json` and the application starts with `npm start`, which runs `node server.js`. Because static serving resolves relative to `server.js`, the parent repository assets are served correctly regardless of the shell's working directory.
 
-The repository contains `server/node_modules` in the current workspace, while `.gitignore` excludes it. `server/package-lock.json` also exists in the workspace but is ignored by `.gitignore`.
+The repository contains `server/node_modules` in the current workspace, while `.gitignore` and `.dockerignore` exclude it. The tracked `server/package-lock.json` is used by both local package management and the container build.
 
 ## Container execution
 
-The image installs production and development dependencies together with `npm install` (there are currently only runtime dependencies) and copies the entire build context. No `.dockerignore` is present, so local ignored content such as `server/node_modules` and Git/workspace files may be sent into the build context and copied in the final `COPY . .` step.
+The image installs only production dependencies with `npm ci --omit=dev`. `.dockerignore` excludes Git/Codex metadata, dependency directories, environment files, npm debug logs, and custom-deck JSON files from the image build context. The runtime bind mount remains responsible for custom-deck persistence.
 
 ## Known issues
 
-- Dependency installation uses `npm install` rather than the lockfile-enforcing `npm ci` command. The lockfile is tracked, but the image build does not require installation to match it exactly.
-- There is no `.dockerignore`, increasing build context size and risking inclusion of development-only files.
-- The server port cannot be configured through the environment.
-- There is no health check.
 - The bind mount persists official and custom data together; deployment-time host contents replace the image defaults.
 - The container runs with the base image's default user unless the image defines otherwise; this Dockerfile does not select a non-root user.
 - Filesystem write errors are not converted into predictable API responses.
@@ -66,9 +64,9 @@ The image installs production and development dependencies together with `npm in
 
 Proposals, not current behavior:
 
-- Track a lockfile and use deterministic dependency installation.
-- Add a `.dockerignore` appropriate to the existing repository.
-- Make the listening port configurable while retaining `3000` as the default.
-- Add a health check and verify the service with an API request.
 - Review whether only custom data should be mounted for persistence, while preserving official-deck availability.
 - Run as an explicitly selected unprivileged user after confirming bind-mount permissions.
+
+## Verified Docker Desktop baseline
+
+The current Compose configuration has been built and started successfully with Docker Desktop using the Linux container engine. The verified baseline includes a `200` response from the frontend on host port `30050`, loading all three official decks through the API, creating a temporary custom deck in the bind-mounted host directory, retaining it across a Compose service restart, and deleting it cleanly afterward. This confirms the current behavior; it does not resolve the known deployment issues above.

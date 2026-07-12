@@ -4,7 +4,12 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const PORT = 3000;
+const configuredPort = Number(process.env.PORT);
+const PORT = Number.isInteger(configuredPort) &&
+    configuredPort >= 1 &&
+    configuredPort <= 65535
+    ? configuredPort
+    : 3000;
 const officialDecksPath = path.join(__dirname, "data", "decks", "official");
 const customDecksPath = path.join(__dirname, "data", "decks", "custom");
 
@@ -61,42 +66,42 @@ function isValidDeckId(deckId) {
 
 function getDeckValidationError(deckData, shouldValidateId) {
     if (deckData === null || typeof deckData !== "object" || Array.isArray(deckData)) {
-        return "Deck data must be a JSON object";
+        return "Kortstokkdata må være et JSON-objekt.";
     }
 
     if (typeof deckData.name !== "string" || deckData.name.trim() === "") {
-        return "Deck name is required";
+        return "Kortstokken må ha et navn.";
     }
 
     if (shouldValidateId && !isValidDeckId(deckData.id)) {
-        return "Deck id must use lowercase letters, numbers, or underscores";
+        return "Kortstokk-ID kan bare inneholde små bokstaver, tall og understrek.";
     }
 
     if (typeof deckData.description !== "string") {
-        return "Deck description must be a string";
+        return "Kortstokkbeskrivelsen må være tekst.";
     }
 
     if (!Number.isInteger(deckData.minPlayers) || deckData.minPlayers < 1) {
-        return "Deck minPlayers must be a positive integer";
+        return "Minimum antall spillere må være et positivt heltall.";
     }
 
     if (!Number.isInteger(deckData.maxPlayers) || deckData.maxPlayers < deckData.minPlayers) {
-        return "Deck maxPlayers must be an integer greater than or equal to minPlayers";
+        return "Maksimum antall spillere må være et heltall som er likt eller større enn minimum.";
     }
 
     if (typeof deckData.ageRating !== "string" || deckData.ageRating.trim() === "") {
-        return "Deck ageRating is required";
+        return "Kortstokken må ha en aldersgrense.";
     }
 
     const validPlayerCountRules = ["any", "exact", "even", "odd"];
 
     if (!validPlayerCountRules.includes(deckData.playerCountRule)) {
-        return "Deck playerCountRule must be any, exact, even, or odd";
+        return "Spillerregelen må være any, exact, even eller odd.";
     }
 
     if (deckData.playerCountRule === "exact" &&
         deckData.minPlayers !== deckData.maxPlayers) {
-        return "Deck exact rule requires matching minPlayers and maxPlayers";
+        return "Spillerregelen exact krever at minimum og maksimum er like.";
     }
 
     const firstEvenPlayerCount = deckData.minPlayers % 2 === 0
@@ -105,7 +110,7 @@ function getDeckValidationError(deckData, shouldValidateId) {
 
     if (deckData.playerCountRule === "even" &&
         firstEvenPlayerCount > deckData.maxPlayers) {
-        return "Deck player range does not contain an even player count";
+        return "Spillerintervallet inneholder ikke et gyldig partall.";
     }
 
     const firstOddPlayerCount = deckData.minPlayers % 2 !== 0
@@ -114,11 +119,11 @@ function getDeckValidationError(deckData, shouldValidateId) {
 
     if (deckData.playerCountRule === "odd" &&
         firstOddPlayerCount > deckData.maxPlayers) {
-        return "Deck player range does not contain an odd player count";
+        return "Spillerintervallet inneholder ikke et gyldig oddetall.";
     }
 
     if (!Array.isArray(deckData.cards) || deckData.cards.length === 0) {
-        return "Deck must contain at least one card";
+        return "Kortstokken må inneholde minst ett vanlig kort.";
     }
 
     const hasInvalidCard = deckData.cards.some(function (card) {
@@ -126,12 +131,12 @@ function getDeckValidationError(deckData, shouldValidateId) {
     });
 
     if (hasInvalidCard) {
-        return "Deck cards must be non-empty strings";
+        return "Vanlige kort må inneholde tekst.";
     }
 
     if (deckData.penaltyCards !== undefined) {
         if (!Array.isArray(deckData.penaltyCards)) {
-            return "Deck penaltyCards must be an array";
+            return "Straffekort må være en liste.";
         }
 
         const hasInvalidPenaltyCard = deckData.penaltyCards.some(function (card) {
@@ -139,7 +144,7 @@ function getDeckValidationError(deckData, shouldValidateId) {
         });
 
         if (hasInvalidPenaltyCard) {
-            return "Deck penaltyCards must contain only non-empty strings";
+            return "Straffekort må inneholde tekst.";
         }
     }
 
@@ -197,7 +202,7 @@ app.get("/api/decks/:id", function (req, res) {
 
     if (deckData === null) {
         return res.status(404).json({
-            error: "Deck not found"
+            error: "Kortstokken ble ikke funnet."
         });
     }
 
@@ -218,13 +223,13 @@ app.post("/api/decks", function (req, res) {
 	
 	if (deckExists(deckData.id)) {
 		return res.status(409).json({
-			error: "Deck id already exists"
+			error: "Kortstokk-ID-en finnes allerede."
 		});
 	}
 	
 	if (deckNameExists(deckData.name)) {
 		return res.status(409).json({
-			error: "Deck name already exists"
+			error: "Kortstokknavnet finnes allerede."
 		});
 	}
 	
@@ -247,7 +252,7 @@ app.put("/api/decks/:id", function (req, res) {
 
     if (deckType === null) {
         return res.status(404).json({
-            error: "Deck not found"
+            error: "Kortstokken ble ikke funnet."
         });
     }
 
@@ -261,7 +266,7 @@ app.put("/api/decks/:id", function (req, res) {
 
     if (deckNameExists(deckData.name, deckId)) {
         return res.status(409).json({
-            error: "Deck name already exists"
+            error: "Kortstokknavnet finnes allerede."
         });
     }
 
@@ -288,13 +293,13 @@ app.delete("/api/decks/:id", function (req, res) {
 
     if (deckType === null) {
         return res.status(404).json({
-            error: "Deck not found"
+            error: "Kortstokken ble ikke funnet."
         });
     }
 
     if (deckType === "official") {
         return res.status(403).json({
-            error: "Official decks cannot be deleted"
+            error: "Offisielle kortstokker kan ikke slettes."
         });
     }
 
@@ -304,6 +309,30 @@ app.delete("/api/decks/:id", function (req, res) {
 
     res.json({
         success: true
+    });
+});
+
+app.use("/api", function (req, res) {
+    res.status(404).json({
+        error: "API-adressen ble ikke funnet."
+    });
+});
+
+app.use(function (error, req, res, next) {
+    console.error("Uventet serverfeil:", error);
+
+    if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+        return res.status(400).json({
+            error: "Forespørselen inneholder ugyldig JSON."
+        });
+    }
+
+    if (res.headersSent) {
+        return next(error);
+    }
+
+    res.status(500).json({
+        error: "En intern serverfeil oppstod. Prøv igjen senere."
     });
 });
 

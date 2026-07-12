@@ -94,21 +94,25 @@
         <div class="editorFormField">
             <label for="editDeckName">Navn</label>
             <input id="editDeckName" type="text">
+            <p id="editDeckNameError" class="fieldError"></p>
         </div>
 
         <div class="editorFormField">
             <label for="editDeckAgeRating">Aldersgrense</label>
             <input id="editDeckAgeRating" type="text">
+            <p id="editDeckAgeRatingError" class="fieldError"></p>
         </div>
 
         <div class="editorFormField">
             <label for="editDeckMinPlayers">Min spillere</label>
             <input id="editDeckMinPlayers" type="number">
+            <p id="editDeckMinPlayersError" class="fieldError"></p>
         </div>
 
         <div class="editorFormField">
             <label for="editDeckMaxPlayers">Maks spillere</label>
             <input id="editDeckMaxPlayers" type="number">
+            <p id="editDeckMaxPlayersError" class="fieldError"></p>
         </div>
 
         <div class="editorFormField editorFormFieldFull">
@@ -119,6 +123,7 @@
                 <option value="even">Må være partall med spillere (even)</option>
                 <option value="odd">Må være oddetall med spillere (odd)</option>
             </select>
+            <p id="editDeckPlayerCountRuleError" class="fieldError"></p>
         </div>
 
         <div class="editorFormField editorFormFieldFull">
@@ -126,6 +131,18 @@
             <textarea id="editDeckDescription" class="autoResizeTextarea descriptionTextarea"></textarea>
         </div>
     </div>
+
+    <section class="deckStatisticsSection" aria-labelledby="deckStatisticsHeading">
+        <h2 id="deckStatisticsHeading">Kortstokkoversikt</h2>
+        <div class="deckStatisticsGrid">
+            <div><strong id="normalCardCount">0</strong><span>Vanlige kort</span></div>
+            <div><strong id="penaltyCardCount">0</strong><span>Straffekort</span></div>
+            <div><strong id="totalCardCount">0</strong><span>Totalt</span></div>
+            <div><strong id="placeholderCardCount">0</strong><span>Kort med spillerkoder</span></div>
+            <div><strong id="duplicateCardCount">0</strong><span>Duplikater</span></div>
+        </div>
+        <p class="statisticsHelp">Duplikatkort markeres med gult. De beholdes til du eventuelt fjerner eller endrer dem.</p>
+    </section>
 
     <section class="placeholderGuideSection" aria-labelledby="placeholderGuideHeading">
         <div class="placeholderGuideText">
@@ -147,6 +164,7 @@
             <h2 id="normalCardsHeading">Vanlige kort</h2>
 
             <div id="editDeckCardList"></div>
+            <p id="editDeckCardsError" class="fieldError"></p>
 
             <textarea id="bulkCardInput" class="autoResizeTextarea bulkTextarea" placeholder="Lim inn flere kort her. Én linje blir ett kort."></textarea>
             <button id="addBulkCardsButton">Legg til flere kort</button>
@@ -180,10 +198,29 @@
 <div id="cardListScreen" class="hasBottomActionBar" style="display: none;">
     <h1>Kortliste</h1>
 
-    <h2>Vanlige kort</h2>
+    <div class="cardListFilters">
+        <label for="cardListSearch">Søk i korttekst</label>
+        <input id="cardListSearch" type="search" placeholder="Skriv inn søkeord" autocomplete="off">
+
+        <label for="cardListCategoryFilter">Vis korttype</label>
+        <select id="cardListCategoryFilter">
+            <option value="all">Alle kort</option>
+            <option value="normal">Vanlige kort</option>
+            <option value="penalty">Straffekort</option>
+        </select>
+
+        <label class="duplicateFilterLabel">
+            <input id="cardListDuplicateFilter" type="checkbox">
+            Vis bare duplikater
+        </label>
+
+        <p id="cardListFilterResult" aria-live="polite"></p>
+    </div>
+
+    <h2 id="normalCardListHeading">Vanlige kort</h2>
     <div id="cardListNormalCards"></div>
 
-    <h2>Straffekort</h2>
+    <h2 id="penaltyCardListHeading">Straffekort</h2>
     <div id="cardListPenaltyCards"></div>
 
     <div class="bottomActionBar">
@@ -214,6 +251,30 @@
     <div class="bottomActionBar">
         <button id="restartGameButton">Spill igjen</button>
         <button id="summaryMenuButton" class="menuNavigationButton">Tilbake til meny</button>
+    </div>
+</div>
+
+<div id="unsavedChangesDialog" class="modalOverlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="unsavedChangesHeading">
+    <div class="modalDialog">
+        <h2 id="unsavedChangesHeading">Ulagrede endringer</h2>
+        <p>Du har endringer som ikke er lagret. Hva vil du gjøre?</p>
+        <div class="modalActions">
+            <button id="saveAndLeaveButton">Lagre og gå tilbake</button>
+            <button id="discardAndLeaveButton" class="dangerButton">Forkast endringer</button>
+            <button id="continueEditingButton">Fortsett redigering</button>
+        </div>
+        <p id="unsavedChangesMessage"></p>
+    </div>
+</div>
+
+<div id="cardPreviewDialog" class="modalOverlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="cardPreviewHeading">
+    <div class="modalDialog cardPreviewDialogContent">
+        <h2 id="cardPreviewHeading">Forhåndsvis kort</h2>
+        <p id="cardPreviewType"></p>
+        <div id="cardPreviewText" class="card"></div>
+        <p id="cardPreviewHelp"></p>
+        <p id="cardPreviewWarning" class="fieldError"></p>
+        <button id="closeCardPreviewButton">Lukk forhåndsvisning</button>
     </div>
 </div>
 

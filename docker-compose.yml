@@ -4,6 +4,9 @@ services:
     container_name: festens_midtpunkt
     restart: unless-stopped
 
+    environment:
+      PORT: "3000"
+
     ports:
       - "30050:3000"
 

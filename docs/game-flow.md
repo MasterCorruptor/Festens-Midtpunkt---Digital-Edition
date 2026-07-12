@@ -90,6 +90,18 @@ After a successful save, the UI displays `Kortstokken er lagret på serveren.` I
 
 If all text is removed from an individual normal-card or penalty-card field, leaving that field removes its empty row from the card list. Saving also filters any remaining blank card values before sending the deck to the API.
 
+The editor records its state when a deck is opened or successfully saved. Returning to the deck list with later changes opens a Norwegian dialog with options to save and leave, discard the changes, or continue editing. A failed save keeps the editor and dialog open. Text still present in either bulk-import field must be added to the card list before saving, because bulk input is not part of the stored deck format. Reloading or closing the page with unsaved editor changes invokes the browser's standard leave-page warning.
+
+Before sending a save request, the editor validates required metadata, integer player limits, the selected player-count rule, and the presence of at least one normal card. Invalid controls are marked and receive a field-specific Norwegian message, focus moves to the first invalid control, and no API request is sent until these local errors are corrected. Server validation remains the final authority.
+
+A compact deck overview updates during editing and displays the current number of normal cards, penalty cards, total cards, and cards containing at least one supported player placeholder. These values are derived from the editor rows and are not stored as additional deck metadata.
+
+Duplicate detection compares cards within their own category, case-insensitively and after trimming and collapsing whitespace. Every matching field is marked with a yellow warning, while the overview counts only extra copies beyond the first. Normal and penalty cards are not compared with each other, and duplicates remain editable and saveable because repeated cards can be intentional.
+
+The separate card-list screen provides case-insensitive text search, a normal/penalty category selector, and an optional duplicate-only filter. It reports the number of visible matches, updates while visible card text is edited, and resets when the card list is reopened. Filtering only hides editor rows; it does not reorder, remove, or modify stored cards.
+
+Each card-list row provides a non-destructive preview dialog. It labels normal and penalty cards, replaces the supported `{player}`, `{player1}`, and `{player2}` placeholders with registered names when enough are available, and fills missing names with clearly disclosed examples. Unknown brace placeholders remain visible and are listed as warnings. Previewing does not mutate card text, saved JSON, game counters, or player-selection statistics.
+
 ## Known limitations
 
 - Player and game state are not persistent.

@@ -1,0 +1,11 @@
+.git
+.gitignore
+.codex
+.agents
+AGENTS.md
+server/node_modules
+node_modules
+npm-debug.log*
+.env
+.env.*
+server/data/decks/custom/*.json

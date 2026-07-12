@@ -59,6 +59,34 @@ const showCardListButton = document.getElementById("showCardListButton");
 const bulkPenaltyCardInput = document.getElementById("bulkPenaltyCardInput");
 const addBulkPenaltyCardsButton = document.getElementById("addBulkPenaltyCardsButton");
 const bulkPenaltyCardMessage = document.getElementById("bulkPenaltyCardMessage");
+const unsavedChangesDialog = document.getElementById("unsavedChangesDialog");
+const saveAndLeaveButton = document.getElementById("saveAndLeaveButton");
+const discardAndLeaveButton = document.getElementById("discardAndLeaveButton");
+const continueEditingButton = document.getElementById("continueEditingButton");
+const unsavedChangesMessage = document.getElementById("unsavedChangesMessage");
+const editDeckNameError = document.getElementById("editDeckNameError");
+const editDeckAgeRatingError = document.getElementById("editDeckAgeRatingError");
+const editDeckMinPlayersError = document.getElementById("editDeckMinPlayersError");
+const editDeckMaxPlayersError = document.getElementById("editDeckMaxPlayersError");
+const editDeckPlayerCountRuleError = document.getElementById("editDeckPlayerCountRuleError");
+const editDeckCardsError = document.getElementById("editDeckCardsError");
+const normalCardCount = document.getElementById("normalCardCount");
+const penaltyCardCount = document.getElementById("penaltyCardCount");
+const totalCardCount = document.getElementById("totalCardCount");
+const placeholderCardCount = document.getElementById("placeholderCardCount");
+const duplicateCardCount = document.getElementById("duplicateCardCount");
+const cardListSearch = document.getElementById("cardListSearch");
+const cardListCategoryFilter = document.getElementById("cardListCategoryFilter");
+const cardListDuplicateFilter = document.getElementById("cardListDuplicateFilter");
+const cardListFilterResult = document.getElementById("cardListFilterResult");
+const normalCardListHeading = document.getElementById("normalCardListHeading");
+const penaltyCardListHeading = document.getElementById("penaltyCardListHeading");
+const cardPreviewDialog = document.getElementById("cardPreviewDialog");
+const cardPreviewType = document.getElementById("cardPreviewType");
+const cardPreviewText = document.getElementById("cardPreviewText");
+const cardPreviewHelp = document.getElementById("cardPreviewHelp");
+const cardPreviewWarning = document.getElementById("cardPreviewWarning");
+const closeCardPreviewButton = document.getElementById("closeCardPreviewButton");
 
 let players = [];
 let currentDeck = null;
@@ -71,6 +99,8 @@ let rejectedCards = 0;
 let penaltyCardsDrawn = 0;
 let playerPickCounts = {};
 let isShowingPenaltyCard = false;
+let savedEditorState = null;
+let previewReturnButton = null;
 
 [editDeckDescription, bulkCardInput, bulkPenaltyCardInput].forEach(function (textarea) {
     initializeAutoResizeTextarea(textarea);
@@ -79,6 +109,13 @@ let isShowingPenaltyCard = false;
 window.addEventListener("pageshow", function () {
     playerNameInput.value = "";
     resizeEditorTextareas();
+});
+
+window.addEventListener("beforeunload", function (event) {
+    if (hasUnsavedDeckChanges()) {
+        event.preventDefault();
+        event.returnValue = "";
+    }
 });
 
 
@@ -486,6 +523,80 @@ function prepareCardText(cardText) {
     return preparedText;
 }
 
+function getCardPreview(cardText) {
+    const examplePlayers = ["Anna", "Bjørn", "Celine", "David"];
+    const previewPlayers = [...players];
+
+    examplePlayers.forEach(function (examplePlayer) {
+        if (!previewPlayers.includes(examplePlayer)) {
+            previewPlayers.push(examplePlayer);
+        }
+    });
+
+    let randomPlayerIndex = 0;
+    let usesExamples = false;
+    let previewText = cardText.replace(/\{player\}/g, function () {
+        const playerPosition = randomPlayerIndex % previewPlayers.length;
+        const playerName = previewPlayers[playerPosition];
+
+        if (playerPosition >= players.length) {
+            usesExamples = true;
+        }
+
+        randomPlayerIndex++;
+        return playerName;
+    });
+
+    if (previewText.includes("{player1}") && players.length < 1) {
+        usesExamples = true;
+    }
+
+    if (previewText.includes("{player2}") && players.length < 2) {
+        usesExamples = true;
+    }
+
+    previewText = previewText.replace(/\{player1\}/g, previewPlayers[0]);
+    previewText = previewText.replace(/\{player2\}/g, previewPlayers[1]);
+
+    const unknownPlaceholders = [...new Set(previewText.match(/\{[^{}]+\}/g) || [])];
+
+    return {
+        text: previewText,
+        usesExamples: usesExamples,
+        unknownPlaceholders: unknownPlaceholders
+    };
+}
+
+function showCardPreview(cardTextValue, cardType, returnButton) {
+    const preview = getCardPreview(cardTextValue);
+
+    previewReturnButton = returnButton;
+    cardPreviewType.textContent = cardType === "penalty"
+        ? "Straffekort"
+        : "Vanlig kort";
+    cardPreviewText.textContent = preview.text;
+    cardPreviewHelp.textContent = preview.usesExamples
+        ? "Eksempelnavn brukes der det ikke finnes nok registrerte spillere."
+        : "Registrerte spillernavn brukes i forhåndsvisningen.";
+    cardPreviewWarning.textContent = preview.unknownPlaceholders.length > 0
+        ? "Ukjente spillerkoder: " + preview.unknownPlaceholders.join(", ")
+        : "";
+    cardPreviewDialog.style.display = "flex";
+    closeCardPreviewButton.focus();
+}
+
+function closeCardPreview() {
+    cardPreviewDialog.style.display = "none";
+
+    if (previewReturnButton !== null && document.contains(previewReturnButton)) {
+        previewReturnButton.focus();
+    }
+
+    previewReturnButton = null;
+}
+
+closeCardPreviewButton.addEventListener("click", closeCardPreview);
+
 function countPlayerPick(playerName) {
     if (!playerPickCounts[playerName]) {
         playerPickCounts[playerName] = 0;
@@ -652,10 +763,11 @@ async function openDeckForEditing(deck) {
 	resetTextareaSize(bulkPenaltyCardInput);
 	bulkCardMessage.textContent = "";
 	bulkPenaltyCardMessage.textContent = "";
+    clearDeckEditorValidation();
 
 	deckData.cards.forEach(function(card) {
 
-		const cardRow = createCardEditorRow(card);
+		const cardRow = createCardEditorRow(card, "normal");
 
 		editDeckCardList.appendChild(cardRow);
 	});
@@ -663,7 +775,7 @@ async function openDeckForEditing(deck) {
 	if (deckData.penaltyCards) {
 		deckData.penaltyCards.forEach(function(card) {
 
-			const cardRow = createCardEditorRow(card);
+			const cardRow = createCardEditorRow(card, "penalty");
 
 			editDeckPenaltyCardList.appendChild(cardRow);
 		});
@@ -671,15 +783,256 @@ async function openDeckForEditing(deck) {
 
     deckEditorScreen.style.display = "none";
     editDeckScreen.style.display = "flex";
+    savedEditorState = getEditorState();
+    updateDeckStatistics();
 }
 
 backToDeckEditorButton.addEventListener("click", function () {
-    showScreen(deckEditorScreen);
-
-    showDeckEditorList();
+    requestLeaveDeckEditor();
 });
 
-function createCardEditorRow(cardText) {
+function getCardValues(primaryList, alternateList) {
+    const list = primaryList.querySelector(".cardEditorInput")
+        ? primaryList
+        : alternateList;
+
+    return Array.from(list.querySelectorAll(".cardEditorInput")).map(function (input) {
+        return input.value;
+    });
+}
+
+function getEditorState() {
+    return JSON.stringify({
+        name: editDeckName.value,
+        description: editDeckDescription.value,
+        ageRating: editDeckAgeRating.value,
+        minPlayers: editDeckMinPlayers.value,
+        maxPlayers: editDeckMaxPlayers.value,
+        playerCountRule: editDeckPlayerCountRule.value,
+        cards: getCardValues(editDeckCardList, cardListNormalCards),
+        penaltyCards: getCardValues(editDeckPenaltyCardList, cardListPenaltyCards),
+        bulkCards: bulkCardInput.value,
+        bulkPenaltyCards: bulkPenaltyCardInput.value
+    });
+}
+
+function updateDeckStatistics() {
+    const normalCards = getCardValues(editDeckCardList, cardListNormalCards);
+    const penaltyCards = getCardValues(editDeckPenaltyCardList, cardListPenaltyCards);
+    const allCards = normalCards.concat(penaltyCards);
+    const cardsWithPlaceholders = allCards.filter(function (cardText) {
+        return /\{player(?:1|2)?\}/.test(cardText);
+    });
+    const duplicateCount = updateDuplicateCardMarkers();
+
+    normalCardCount.textContent = normalCards.length;
+    penaltyCardCount.textContent = penaltyCards.length;
+    totalCardCount.textContent = allCards.length;
+    placeholderCardCount.textContent = cardsWithPlaceholders.length;
+    duplicateCardCount.textContent = duplicateCount;
+}
+
+function normalizeCardTextForComparison(cardText) {
+    return cardText.trim().replace(/\s+/g, " ").toLocaleLowerCase("nb-NO");
+}
+
+function getActiveCardInputs(primaryList, alternateList) {
+    const list = primaryList.querySelector(".cardEditorInput")
+        ? primaryList
+        : alternateList;
+
+    return Array.from(list.querySelectorAll(".cardEditorInput"));
+}
+
+function markDuplicateCardsInCategory(cardInputs) {
+    const inputsByText = new Map();
+
+    cardInputs.forEach(function (input) {
+        input.classList.remove("duplicateCardInput");
+        input.removeAttribute("title");
+
+        const normalizedText = normalizeCardTextForComparison(input.value);
+
+        if (normalizedText === "") {
+            return;
+        }
+
+        if (!inputsByText.has(normalizedText)) {
+            inputsByText.set(normalizedText, []);
+        }
+
+        inputsByText.get(normalizedText).push(input);
+    });
+
+    let duplicateCount = 0;
+
+    inputsByText.forEach(function (matchingInputs) {
+        if (matchingInputs.length < 2) {
+            return;
+        }
+
+        duplicateCount += matchingInputs.length - 1;
+
+        matchingInputs.forEach(function (input) {
+            input.classList.add("duplicateCardInput");
+            input.title = "Dette kortet har samme tekst som et annet kort i samme kategori.";
+        });
+    });
+
+    return duplicateCount;
+}
+
+function updateDuplicateCardMarkers() {
+    const normalCardInputs = getActiveCardInputs(editDeckCardList, cardListNormalCards);
+    const penaltyCardInputs = getActiveCardInputs(
+        editDeckPenaltyCardList,
+        cardListPenaltyCards
+    );
+
+    return markDuplicateCardsInCategory(normalCardInputs) +
+        markDuplicateCardsInCategory(penaltyCardInputs);
+}
+
+function hasUnsavedDeckChanges() {
+    return savedEditorState !== null && getEditorState() !== savedEditorState;
+}
+
+const deckEditorValidationFields = [
+    [editDeckName, editDeckNameError],
+    [editDeckAgeRating, editDeckAgeRatingError],
+    [editDeckMinPlayers, editDeckMinPlayersError],
+    [editDeckMaxPlayers, editDeckMaxPlayersError],
+    [editDeckPlayerCountRule, editDeckPlayerCountRuleError],
+    [bulkCardInput, editDeckCardsError]
+];
+
+function clearDeckEditorValidation() {
+    deckEditorValidationFields.forEach(function ([field, errorElement]) {
+        field.classList.remove("invalidField");
+        field.removeAttribute("aria-invalid");
+        errorElement.textContent = "";
+    });
+}
+
+function showDeckEditorValidationError(field, errorElement, message) {
+    field.classList.add("invalidField");
+    field.setAttribute("aria-invalid", "true");
+    errorElement.textContent = message;
+}
+
+function validateDeckEditor() {
+    clearDeckEditorValidation();
+
+    const errors = [];
+    const minimumPlayers = Number(editDeckMinPlayers.value);
+    const maximumPlayers = Number(editDeckMaxPlayers.value);
+    const playerRule = editDeckPlayerCountRule.value;
+    const normalCards = document.querySelectorAll("#editDeckCardList .cardEditorInput");
+
+    if (editDeckName.value.trim() === "") {
+        errors.push([editDeckName, editDeckNameError, "Skriv inn et navn på kortstokken."]);
+    }
+
+    if (editDeckAgeRating.value.trim() === "") {
+        errors.push([editDeckAgeRating, editDeckAgeRatingError, "Skriv inn en aldersgrense."]);
+    }
+
+    if (!Number.isInteger(minimumPlayers) || minimumPlayers < 1) {
+        errors.push([editDeckMinPlayers, editDeckMinPlayersError, "Minimum må være et positivt heltall."]);
+    }
+
+    if (!Number.isInteger(maximumPlayers) || maximumPlayers < minimumPlayers) {
+        errors.push([editDeckMaxPlayers, editDeckMaxPlayersError, "Maksimum må være et heltall som er likt eller større enn minimum."]);
+    }
+
+    if (playerRule === "exact" && minimumPlayers !== maximumPlayers) {
+        errors.push([editDeckPlayerCountRule, editDeckPlayerCountRuleError, "Exact krever at minimum og maksimum er like."]);
+    } else if (playerRule === "even") {
+        const firstEvenPlayerCount = minimumPlayers % 2 === 0
+            ? minimumPlayers
+            : minimumPlayers + 1;
+
+        if (firstEvenPlayerCount > maximumPlayers) {
+            errors.push([editDeckPlayerCountRule, editDeckPlayerCountRuleError, "Spillerintervallet inneholder ikke et gyldig partall."]);
+        }
+    } else if (playerRule === "odd") {
+        const firstOddPlayerCount = minimumPlayers % 2 !== 0
+            ? minimumPlayers
+            : minimumPlayers + 1;
+
+        if (firstOddPlayerCount > maximumPlayers) {
+            errors.push([editDeckPlayerCountRule, editDeckPlayerCountRuleError, "Spillerintervallet inneholder ikke et gyldig oddetall."]);
+        }
+    }
+
+    if (normalCards.length === 0) {
+        errors.push([bulkCardInput, editDeckCardsError, "Legg til minst ett vanlig kort."]);
+    }
+
+    errors.forEach(function ([field, errorElement, message]) {
+        showDeckEditorValidationError(field, errorElement, message);
+    });
+
+    if (errors.length > 0) {
+        errors[0][0].focus();
+        return false;
+    }
+
+    return true;
+}
+
+deckEditorValidationFields.forEach(function ([field, errorElement]) {
+    function clearFieldValidation() {
+        field.classList.remove("invalidField");
+        field.removeAttribute("aria-invalid");
+        errorElement.textContent = "";
+    }
+
+    field.addEventListener("input", clearFieldValidation);
+    field.addEventListener("change", clearFieldValidation);
+});
+
+function leaveDeckEditor() {
+    savedEditorState = null;
+    unsavedChangesDialog.style.display = "none";
+    showScreen(deckEditorScreen);
+    showDeckEditorList();
+}
+
+function requestLeaveDeckEditor() {
+    if (!hasUnsavedDeckChanges()) {
+        leaveDeckEditor();
+        return;
+    }
+
+    unsavedChangesMessage.textContent = "";
+    unsavedChangesDialog.style.display = "flex";
+    continueEditingButton.focus();
+}
+
+continueEditingButton.addEventListener("click", function () {
+    unsavedChangesDialog.style.display = "none";
+    unsavedChangesMessage.textContent = "";
+    backToDeckEditorButton.focus();
+});
+
+discardAndLeaveButton.addEventListener("click", function () {
+    leaveDeckEditor();
+});
+
+saveAndLeaveButton.addEventListener("click", async function () {
+    unsavedChangesMessage.textContent = "";
+
+    const saved = await saveCurrentDeck();
+
+    if (saved) {
+        leaveDeckEditor();
+    } else {
+        unsavedChangesMessage.textContent = saveDeckMessage.textContent;
+    }
+});
+
+function createCardEditorRow(cardText, cardType) {
 
     const cardRow = document.createElement("div");
     cardRow.classList.add("cardEditorRow");
@@ -697,9 +1050,16 @@ function createCardEditorRow(cardText) {
 		activeCardInput = cardInput;
 	});
 
+    cardInput.addEventListener("input", function () {
+        updateDeckStatistics();
+        updateCardListFilter();
+    });
+
 	cardInput.addEventListener("blur", function () {
 		if (cardInput.value.trim() === "") {
 			cardRow.remove();
+			updateDeckStatistics();
+			updateCardListFilter();
 
 			if (activeCardInput === cardInput) {
 				activeCardInput = null;
@@ -713,10 +1073,24 @@ function createCardEditorRow(cardText) {
 
     removeCardButton.addEventListener("click", function () {
         cardRow.remove();
+        updateDeckStatistics();
+        updateCardListFilter();
     });
 
+    const previewCardButton = document.createElement("button");
+    previewCardButton.textContent = "Forhåndsvis";
+    previewCardButton.classList.add("previewButton");
+    previewCardButton.addEventListener("click", function () {
+        showCardPreview(cardInput.value, cardType, previewCardButton);
+    });
+
+    const cardRowActions = document.createElement("div");
+    cardRowActions.classList.add("cardEditorRowActions");
+    cardRowActions.appendChild(previewCardButton);
+    cardRowActions.appendChild(removeCardButton);
+
     cardRow.appendChild(cardInput);
-    cardRow.appendChild(removeCardButton);
+    cardRow.appendChild(cardRowActions);
 
     return cardRow;
 }
@@ -737,7 +1111,7 @@ addBulkCardsButton.addEventListener("click", function () {
         const trimmedCardText = cardText.trim();
 
         if (trimmedCardText !== "") {
-            const cardRow = createCardEditorRow(trimmedCardText);
+            const cardRow = createCardEditorRow(trimmedCardText, "normal");
             editDeckCardList.appendChild(cardRow);
 			addedCards++;
         }
@@ -746,6 +1120,7 @@ addBulkCardsButton.addEventListener("click", function () {
     bulkCardInput.value = "";
 	autoResizeTextarea(bulkCardInput);
 	bulkCardMessage.textContent = addedCards + " kort lagt til.";
+    updateDeckStatistics();
 });
 
 addBulkPenaltyCardsButton.addEventListener("click", function () {
@@ -756,7 +1131,7 @@ addBulkPenaltyCardsButton.addEventListener("click", function () {
         const trimmedCardText = cardText.trim();
 
         if (trimmedCardText !== "") {
-            const cardRow = createCardEditorRow(trimmedCardText);
+            const cardRow = createCardEditorRow(trimmedCardText, "penalty");
             editDeckPenaltyCardList.appendChild(cardRow);
             addedCards++;
         }
@@ -765,10 +1140,26 @@ addBulkPenaltyCardsButton.addEventListener("click", function () {
     bulkPenaltyCardInput.value = "";
     autoResizeTextarea(bulkPenaltyCardInput);
     bulkPenaltyCardMessage.textContent = addedCards + " straffekort lagt til.";
+    updateDeckStatistics();
 });
 
-saveDeckButton.addEventListener("click", async function () {
+saveDeckButton.addEventListener("click", function () {
+	saveCurrentDeck();
+});
+
+async function saveCurrentDeck() {
 	returnToDeckEditor();
+
+    if (bulkCardInput.value.trim() !== "" || bulkPenaltyCardInput.value.trim() !== "") {
+        saveDeckMessage.textContent =
+            "Legg til teksten fra masseinnlimingsfeltene før kortstokken lagres.";
+        return false;
+    }
+
+    if (!validateDeckEditor()) {
+        saveDeckMessage.textContent = "Rett feilene i de markerte feltene før du lagrer.";
+        return false;
+    }
 
     const cardInputs = document.querySelectorAll("#editDeckCardList .cardEditorInput");
 
@@ -814,12 +1205,15 @@ penaltyCardInputs.forEach(function (input) {
         const savedDeck = await saveDeckData(updatedDeck);
 
         deckBeingEdited = savedDeck;
+        savedEditorState = getEditorState();
         saveDeckMessage.textContent = "Kortstokken er lagret på serveren.";
+        return true;
     } catch (error) {
         saveDeckMessage.textContent =
             "Kunne ikke lagre kortstokken: " + error.message;
+        return false;
     }
-});
+}
 
 async function getDeckById(deckId) {
     const response = await fetch("/api/decks/" + deckId);
@@ -861,9 +1255,12 @@ function openNewDeckEditor() {
     bulkCardMessage.textContent = "";
     bulkPenaltyCardMessage.textContent = "";
     saveDeckMessage.textContent = "";
+    clearDeckEditorValidation();
 
     deckEditorScreen.style.display = "none";
     editDeckScreen.style.display = "flex";
+    savedEditorState = getEditorState();
+    updateDeckStatistics();
 }
 
 function createDeckId(name) {
@@ -1020,6 +1417,8 @@ function insertPlaceholder(inputElement, placeholderText) {
     if (inputElement instanceof HTMLTextAreaElement) {
         autoResizeTextarea(inputElement);
     }
+
+    updateDeckStatistics();
 }
 
 function showCardListEditor() {
@@ -1038,12 +1437,79 @@ function showCardListEditor() {
         cardListPenaltyCards.appendChild(row);
     });
 
+    cardListSearch.value = "";
+    cardListCategoryFilter.value = "all";
+    cardListDuplicateFilter.checked = false;
+    updateCardListFilter();
+
     showScreen(cardListScreen);
 
     requestAnimationFrame(function () {
         resizeEditorTextareas();
     });
 }
+
+function updateCardListFilter() {
+    const searchText = cardListSearch.value.trim().toLocaleLowerCase("nb-NO");
+    const category = cardListCategoryFilter.value;
+    const onlyDuplicates = cardListDuplicateFilter.checked;
+    const categoryLists = [
+        {
+            name: "normal",
+            container: cardListNormalCards,
+            heading: normalCardListHeading
+        },
+        {
+            name: "penalty",
+            container: cardListPenaltyCards,
+            heading: penaltyCardListHeading
+        }
+    ];
+    let visibleCards = 0;
+    let totalCards = 0;
+
+    categoryLists.forEach(function (categoryList) {
+        const categoryIsSelected = category === "all" || category === categoryList.name;
+        const rows = categoryList.container.querySelectorAll(".cardEditorRow");
+        let categoryHasVisibleCards = false;
+
+        rows.forEach(function (row) {
+            const input = row.querySelector(".cardEditorInput");
+            const matchesSearch = input.value
+                .toLocaleLowerCase("nb-NO")
+                .includes(searchText);
+            const matchesDuplicateFilter = !onlyDuplicates ||
+                input.classList.contains("duplicateCardInput");
+            const isVisible = categoryIsSelected &&
+                matchesSearch &&
+                matchesDuplicateFilter;
+
+            row.style.display = isVisible ? "" : "none";
+            totalCards++;
+
+            if (isVisible) {
+                visibleCards++;
+                categoryHasVisibleCards = true;
+            }
+        });
+
+        categoryList.heading.style.display = categoryIsSelected && categoryHasVisibleCards
+            ? ""
+            : "none";
+        categoryList.container.style.display = categoryIsSelected && categoryHasVisibleCards
+            ? ""
+            : "none";
+    });
+
+    cardListFilterResult.textContent = visibleCards === 0
+        ? "Ingen kort samsvarer med filteret."
+        : "Viser " + visibleCards + " av " + totalCards + " kort.";
+}
+
+[cardListSearch, cardListCategoryFilter, cardListDuplicateFilter].forEach(function (filter) {
+    filter.addEventListener("input", updateCardListFilter);
+    filter.addEventListener("change", updateCardListFilter);
+});
 
 showCardListButton.addEventListener("click", function () {
     showCardListEditor();
@@ -1053,12 +1519,14 @@ function returnToDeckEditor() {
     const normalCardRows = cardListNormalCards.querySelectorAll(".cardEditorRow");
 
     normalCardRows.forEach(function(row) {
+        row.style.display = "";
         editDeckCardList.appendChild(row);
     });
 
     const penaltyCardRows = cardListPenaltyCards.querySelectorAll(".cardEditorRow");
 
     penaltyCardRows.forEach(function(row) {
+        row.style.display = "";
         editDeckPenaltyCardList.appendChild(row);
     });
 

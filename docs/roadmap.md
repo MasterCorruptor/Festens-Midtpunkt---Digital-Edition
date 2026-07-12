@@ -2,7 +2,7 @@
 
 This roadmap separates confirmed limitations observed in the current repository from proposed work. Proposed items are not implemented commitments and do not describe current functionality.
 
-Current documented release: **v0.6.0**.
+Current documented release: **v0.7.0**.
 
 ## Current baseline
 
@@ -256,6 +256,22 @@ Keep back, main-menu, and save actions available near the bottom edge of the vie
 6. Goal 4 — dynamic sizing integrated with the revised layout and bottom action bar.
 
 After all six goals pass their individual tests, run a combined desktop/mobile editor regression and the existing game/API smoke tests before setting the final v0.6.0 release number.
+
+## v0.7.0 worklist
+
+The repository owner approved the following incremental goals. Each goal is implemented and manually verified before work begins on the next one.
+
+1. Protect unsaved deck-editor changes during internal navigation, reload, and page closing. **Completed and manually verified.**
+2. Present all user-facing errors consistently in Norwegian while retaining useful technical server logs. **Completed and manually verified.**
+3. Add immediate editor validation with field-specific Norwegian feedback. **Completed and manually verified.**
+4. Add live deck statistics without changing the stored deck format. **Completed and manually verified.**
+5. Detect and clearly mark duplicate cards without deleting them automatically. **Completed and manually verified.**
+6. Add card-list search and filtering without changing stored card order. **Completed and manually verified.**
+7. Add a non-destructive card preview with player placeholder examples. **Completed and manually verified.**
+8. Establish and manually verify the current Docker baseline on Docker Desktop. **Completed and manually verified.**
+9. Implement only separately approved Docker corrections found by the baseline test. **Completed and manually verified: low-risk 9A corrections.**
+
+Docker corrections may be released separately from v0.7.0 if they require an independent deployment-focused patch.
 
 ## Deferred README ideas requiring separate approval
 
