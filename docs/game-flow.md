@@ -56,15 +56,27 @@ There is no loading indicator or explicit handling for failed fetches.
 
 ## Card drawing
 
-The `Godta` button records the displayed normal card as accepted and advances to the next normal card. `Avvis` records it as rejected and displays a random penalty card when the deck contains penalty cards. Pressing `Godta` while a penalty card or the no-penalty message is displayed advances without increasing the accepted-normal-card count. Placeholder substitution happens when a card is displayed and does not alter the stored card string.
+The `Godta` button advances to the next normal card. `Avvis` is shown only when the selected deck contains at least one penalty card. It displays a random penalty card before the game can advance. Decks without penalty cards can therefore be completed with `Godta`, but their normal cards cannot be rejected through the user interface. Placeholder substitution happens when a card is displayed and does not alter the stored card string.
 
-After the final normal card, the game shows a summary with accepted cards, rejected cards, penalty cards drawn, and up to three players most frequently selected through placeholders.
+After the final normal card, the game confirms `Dere kom gjennom hele kortstokken.` and shows the total number of normal cards completed as `Dere har nå gått gjennom X kort.`, the penalty count as `Straffekort trukket i løpet av dette spillet`, and up to three players under `Spillerne som dukket opp flest ganger i kortene!`. Rejecting a normal card and drawing its penalty card are one action, represented by the single penalty-card counter.
 
 Normal cards are traversed once in their shuffled order. Penalty cards are chosen randomly and can repeat. No recent-card history is needed because normal cards are not reshuffled within the same game.
 
+The game screen shows the current normal-card position as `Kort X av Y`, where `Y` is the number of normal cards in the selected deck. While a penalty card is visible, the indicator reads `Straffekort X av Y`, where `X` is the number of penalty cards drawn during the current game and `Y` is the number of available penalty cards in the deck. Penalty cards are still selected randomly and can repeat; the indicator is a draw counter, not a unique-position guarantee. Drawing a penalty card does not advance the normal-card position. Restarting the game resets both counters and shows `Kort 1 av Y` after the new shuffle.
+
+Accepting a normal card runs an approximately half-second, two-part transition: the current card receives a brief green border and glow while it fades and moves slightly left, then the next card fades in from the right with its normal white border. Game controls are temporarily disabled during the transition to prevent double input. Accepting a penalty card and rejecting a normal card do not use this same transition.
+
+Rejecting a normal card uses a distinct transition before the penalty card is displayed. The rejected card receives a brief red border and glow, then fades and moves slightly right. The penalty card then fades in with a small downward movement and a red border and glow. Its red frame remains and pulses slowly while the penalty card is active, then returns to the normal white frame when the next normal card is shown. Controls remain disabled until the rejection and penalty-card entrance sequence is complete.
+
 ## End and restart behavior
 
-After every normal card has been accepted or rejected, the game ends automatically on the summary screen. The summary shows accepted normal cards, rejected normal cards, penalty cards drawn, and the most frequently selected players.
+After every normal card has been accepted or rejected, the game ends automatically on the summary screen. The completed-card sentence uses the deck's total number of normal cards because all of them have been traversed at that point. The summary separately shows penalty cards drawn and identifies the players most frequently selected through placeholders. It does not show accepted or rejected normal cards as separate counts because every available rejection necessarily draws exactly one penalty card.
+
+When the summary screen is shown, its heading, text, and statistics fade in and move slightly upward into place over approximately 1.5 seconds. The fixed bottom action bar is outside the animated content so it stays anchored to the viewport throughout the entrance. This entrance does not delay or alter the summary statistics or navigation actions.
+
+The summary also starts a temporary confetti effect made from DOM elements. It creates 180 pieces whose start times are distributed across approximately 6.2 seconds. Each piece falls at the original speed for roughly two to three seconds, producing a continuous effect that finishes after approximately 9.3 seconds. The pieces ignore pointer input and are removed after 9.5 seconds at the latest. Starting another game or leaving the summary clears remaining pieces immediately.
+
+If the browser reports `prefers-reduced-motion: reduce`, card transitions and the summary entrance are skipped, confetti elements are not created, and the penalty-card pulse is disabled. Active penalty cards retain a static red border and subtle red shadow so the card type remains visually distinct without motion. Game state, counters, and navigation behavior remain unchanged.
 
 `Tilbake til meny` clears the displayed card, current deck, current card index, counters, and player-selection statistics, then shows the menu. Registered players remain.
 

@@ -103,6 +103,213 @@ button:hover {
     user-select: none;
 }
 
+.gameProgress {
+    margin: 0;
+    padding: 8px 16px;
+    border: 1px solid #475569;
+    border-radius: 999px;
+    background-color: #273449;
+    color: #e2e8f0;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.cardAcceptedExit {
+    animation: cardAcceptedExit 225ms ease-in forwards;
+}
+
+.cardAcceptedEnter {
+    animation: cardAcceptedEnter 275ms ease-out;
+}
+
+.cardRejectedExit {
+    animation: cardRejectedExit 400ms ease-in forwards;
+}
+
+.cardPenaltyEnter {
+    animation: cardPenaltyEnter 450ms ease-out;
+}
+
+.penaltyCardActive {
+    border-color: #ef4444;
+    animation: penaltyCardPulse 2.4s ease-in-out infinite;
+}
+
+.penaltyCardActive.cardPenaltyEnter {
+    animation: cardPenaltyEnter 450ms ease-out;
+}
+
+.gameSummaryContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+}
+
+.gameSummaryContent.summaryEnter {
+    animation: summaryEnter 1.5s ease-out;
+}
+
+.confettiLayer {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.confettiPiece {
+    position: absolute;
+    top: -20px;
+    border-radius: 2px;
+    opacity: 0;
+    animation: confettiFall var(--confetti-duration) linear var(--confetti-delay) forwards;
+}
+
+@keyframes cardAcceptedExit {
+    from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        border-color: #ffffff;
+        box-shadow: none;
+    }
+
+    30% {
+        border-color: #4ade80;
+        box-shadow: 0 0 18px rgba(74, 222, 128, 0.4);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-24px) scale(0.98);
+        border-color: #22c55e;
+        box-shadow: 0 0 24px rgba(34, 197, 94, 0.35);
+    }
+}
+
+@keyframes cardAcceptedEnter {
+    from {
+        opacity: 0;
+        transform: translateX(24px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes cardRejectedExit {
+    0% {
+        opacity: 1;
+        transform: translateX(0) rotate(0deg);
+        border-color: #ffffff;
+        box-shadow: none;
+    }
+
+    30% {
+        transform: translateX(-8px) rotate(-1deg);
+        border-color: #f87171;
+        box-shadow: 0 0 18px rgba(248, 113, 113, 0.4);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(32px) rotate(2deg) scale(0.98);
+        border-color: #ef4444;
+        box-shadow: 0 0 24px rgba(239, 68, 68, 0.35);
+    }
+}
+
+@keyframes cardPenaltyEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(-24px) scale(0.96);
+        border-color: #ef4444;
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.55);
+    }
+
+    65% {
+        opacity: 1;
+        transform: translateY(4px) scale(1.01);
+        border-color: #f87171;
+        box-shadow: 0 0 22px rgba(248, 113, 113, 0.45);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        border-color: #ef4444;
+        box-shadow: 0 0 14px rgba(239, 68, 68, 0.3);
+    }
+}
+
+@keyframes penaltyCardPulse {
+    0%,
+    100% {
+        border-color: #dc2626;
+        box-shadow: 0 0 10px rgba(220, 38, 38, 0.25);
+    }
+
+    50% {
+        border-color: #f87171;
+        box-shadow: 0 0 24px rgba(248, 113, 113, 0.55);
+    }
+}
+
+@keyframes summaryEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes confettiFall {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, -20px, 0) rotate(0deg);
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate3d(var(--confetti-drift), 105vh, 0)
+            rotate(var(--confetti-rotation));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cardAcceptedExit,
+    .cardAcceptedEnter,
+    .cardRejectedExit,
+    .cardPenaltyEnter,
+    .gameSummaryContent.summaryEnter,
+    .confettiPiece {
+        animation: none;
+    }
+
+    .penaltyCardActive,
+    .penaltyCardActive.cardPenaltyEnter {
+        animation: none;
+        border-color: #ef4444;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+    }
+}
+
 .removeButton {
     font-size: 0.8rem;
     padding: 4px 8px;

@@ -2,7 +2,7 @@
 
 This roadmap separates confirmed limitations observed in the current repository from proposed work. Proposed items are not implemented commitments and do not describe current functionality.
 
-Current documented release: **v0.7.0**.
+Current documented release: **v0.8.0**.
 
 ## Current baseline
 
@@ -272,6 +272,25 @@ The repository owner approved the following incremental goals. Each goal is impl
 9. Implement only separately approved Docker corrections found by the baseline test. **Completed and manually verified: low-risk 9A corrections.**
 
 Docker corrections may be released separately from v0.7.0 if they require an independent deployment-focused patch.
+
+## v0.8.0 worklist
+
+The repository owner approved the following incremental goals. Each goal is implemented and manually verified before work begins on the next one.
+
+1. Show normal-card and penalty-card counters as `Kort X av Y` and `Straffekort X av Y`. **Completed and manually verified.**
+2. Hide the reject action for decks without penalty cards. **Completed and manually verified.**
+3. Treat rejecting a normal card and drawing its penalty card as one action and one summary count. **Completed and manually verified.**
+4. Clarify the game-summary labels with informal, natural Norwegian wording. **Completed and manually verified.**
+5. Add a transition when a normal card is accepted. **Completed and manually verified.**
+6. Add a distinct transition when a normal card is rejected. **Completed and manually verified.**
+7. Add a transition and persistent pulsing red frame when a penalty card is shown. **Completed and manually verified.**
+8. Add a restrained animation when the summary appears. **Completed and manually verified.**
+9. Add a short, timed confetti effect at game completion. **Completed and manually verified after duration adjustment.**
+10. Respect the operating system or browser preference for reduced motion. **Completed and manually verified.**
+11. Run a combined visual and functional regression test. **Completed and manually verified, including Docker Compose on host port 27015.**
+12. Preserve the manually expanded first full draft of the official family deck as an intentional v0.8.0 content update. **Completed and manually verified: 50 normal cards and 20 penalty cards.**
+
+Password protection for custom decks is deferred to v0.9.0 so its storage, recovery, and server-administration consequences can be designed and tested independently.
 
 ## Deferred README ideas requiring separate approval
 

@@ -8,7 +8,7 @@ services:
       PORT: "3000"
 
     ports:
-      - "30050:3000"
+      - "27015:3000"
 
     volumes:
       - ./server/data:/app/server/data

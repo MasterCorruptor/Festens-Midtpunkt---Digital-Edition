@@ -229,6 +229,8 @@
 </div>
 
 <div id="gameScreen" class="hasBottomActionBar" style="display: none;">
+    <p id="gameProgress" class="gameProgress" aria-live="polite"></p>
+
     <div id="cardText" class="card"></div>
 
     <div id="cardActionButtons">
@@ -242,11 +244,15 @@
 </div>
 
 <div id="gameSummaryScreen" class="hasBottomActionBar" style="display: none;">
-    <h1>Alle kort er brukt!</h1>
+    <div id="confettiLayer" class="confettiLayer" aria-hidden="true"></div>
 
-    <p>Du kom gjennom hele kortstokken.</p>
+    <div id="gameSummaryContent" class="gameSummaryContent">
+        <h1>Alle kort er brukt!</h1>
 
-    <div id="gameSummaryStats"></div>
+        <p>Dere kom gjennom hele kortstokken.</p>
+
+        <div id="gameSummaryStats"></div>
+    </div>
 
     <div class="bottomActionBar">
         <button id="restartGameButton">Spill igjen</button>
