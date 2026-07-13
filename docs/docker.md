@@ -23,10 +23,10 @@ The application server serves both static files and the API from the same proces
 - assigns container name `festens_midtpunkt`;
 - uses restart policy `unless-stopped`;
 - sets the internal `PORT` environment variable to `3000`;
-- maps host `30050` to container `3000`;
+- maps host `27015` to container `3000`;
 - bind-mounts host `./server/data` at `/app/server/data`.
 
-After `docker compose up --build`, the UI is available at `http://localhost:30050` on the Docker host.
+After `docker compose up --build`, the UI is available at `http://localhost:27015` on the Docker host. From another machine, use `http://<server-ip>:27015`, provided the host firewall and network routing allow inbound access to that port.
 
 ## Persistent storage
 
@@ -39,7 +39,7 @@ This is a bind mount, not a Docker-managed named volume. Host permissions and th
 | Execution mode | Browser address | Process port |
 | --- | --- | --- |
 | Direct Node execution | `http://localhost:3000` | `3000` |
-| Docker Compose | `http://localhost:30050` | `3000` in container |
+| Docker Compose | `http://localhost:27015` on the host or `http://<server-ip>:27015` remotely | `3000` in container |
 | Bare `docker run` | Depends on explicit `-p` mapping | `3000` in container |
 
 The server reads the `PORT` environment variable and accepts integer ports from `1` through `65535`. Missing or invalid values fall back to `3000`. Compose explicitly retains `3000` inside the container.
@@ -69,4 +69,4 @@ Proposals, not current behavior:
 
 ## Verified Docker Desktop baseline
 
-The current Compose configuration has been built and started successfully with Docker Desktop using the Linux container engine. The verified baseline includes a `200` response from the frontend on host port `30050`, loading all three official decks through the API, creating a temporary custom deck in the bind-mounted host directory, retaining it across a Compose service restart, and deleting it cleanly afterward. This confirms the current behavior; it does not resolve the known deployment issues above.
+The Compose configuration has been built and started successfully with Docker Desktop using the Linux container engine. The original baseline verified frontend and API access, loading all three official decks, creating a temporary custom deck in the bind-mounted host directory, retaining it across a Compose service restart, and deleting it cleanly afterward. The combined v0.8.0 regression was subsequently completed with host port `27015`. This confirms the current behavior; it does not resolve the known deployment issues above.

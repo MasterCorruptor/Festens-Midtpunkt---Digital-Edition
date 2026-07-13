@@ -2,7 +2,7 @@
 
 Festens Midtpunkt er en selvhostet nettapplikasjon for digitale selskaps- og kortspill. Applikasjonen støtter offisielle og egendefinerte kortstokker, spillere, plassholdere, straffekort og redigering direkte i nettleseren.
 
-Nåværende versjon: **v0.7.0**
+Nåværende versjon: **v0.8.0**
 
 ## Nåværende funksjonalitet
 
@@ -11,10 +11,13 @@ Nåværende versjon: **v0.7.0**
 - Registrering og fjerning av spillere.
 - Validering av minimum, maksimum og spillerregel før start.
 - Tilfeldig stokking av vanlige kort ved spillstart.
-- Godkjenning eller avvisning av hvert vanlig kort.
-- Tilfeldige straffekort når et kort avvises.
-- Oppsummering av godkjente, avviste og trukne straffekort.
+- Kortindikatorer for vanlige kort og trukne straffekort.
+- Godkjenning av hvert vanlig kort og avvisning når kortstokken har straffekort.
+- Ett tilfeldig straffekort for hver avvisning.
+- Oppsummering av gjennomgåtte vanlige kort og trukne straffekort.
 - Statistikk over spillerne som oftest ble valgt gjennom plassholdere.
+- Handlingsanimasjoner, straffekortmarkering og tidsbegrenset konfetti.
+- Støtte for brukerens innstilling for redusert bevegelse.
 - Restart eller retur til hovedmenyen etter avsluttet spill.
 
 ### Kortstokkeditor
@@ -70,7 +73,7 @@ docker compose up --build
 Docker Compose eksponerer applikasjonen på:
 
 ```text
-http://localhost:30050
+http://localhost:27015
 ```
 
 `server/data` bind-monteres til containeren slik at kortstokkendringer lagres på vertsmaskinen. Se [docs/docker.md](docs/docker.md) for detaljer og kjente begrensninger.

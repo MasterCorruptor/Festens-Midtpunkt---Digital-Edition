@@ -51,7 +51,7 @@ The API scans these directories on each request; it does not maintain an in-memo
 
 ## Deployment model
 
-Direct execution uses `npm start` from `server/` and exposes port `3000`. Docker builds one Node 24 Alpine image. Docker Compose maps host port `30050` to container port `3000` and bind-mounts `./server/data` at `/app/server/data`.
+Direct execution uses `npm start` from `server/` and exposes port `3000`. Docker builds one Node 24 Alpine image. Docker Compose maps host port `27015` to container port `3000` and bind-mounts `./server/data` at `/app/server/data`. The application is therefore reached at `http://localhost:27015` on the Docker host or `http://<server-ip>:27015` from another machine that can reach the host and port.
 
 See [docker.md](docker.md) for operational details.
 

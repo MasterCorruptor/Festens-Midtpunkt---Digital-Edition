@@ -4,6 +4,7 @@ const menuButton = document.getElementById("menuButton");
 const acceptCardButton = document.getElementById("acceptCardButton");
 const rejectCardButton = document.getElementById("rejectCardButton");
 const cardText = document.getElementById("cardText");
+const gameProgress = document.getElementById("gameProgress");
 const playerNameInput = document.getElementById("playerNameInput");
 const addPlayerButton = document.getElementById("addPlayerButton");
 const playerList = document.getElementById("playerList");
@@ -45,6 +46,8 @@ const insertPlayerButton = document.getElementById("insertPlayerButton");
 const insertPlayer1Button = document.getElementById("insertPlayer1Button");
 const insertPlayer2Button = document.getElementById("insertPlayer2Button");
 const gameSummaryScreen = document.getElementById("gameSummaryScreen");
+const confettiLayer = document.getElementById("confettiLayer");
+const gameSummaryContent = document.getElementById("gameSummaryContent");
 const gameSummaryStats = document.getElementById("gameSummaryStats");
 const restartGameButton = document.getElementById("restartGameButton");
 const summaryMenuButton = document.getElementById("summaryMenuButton");
@@ -87,6 +90,7 @@ const cardPreviewText = document.getElementById("cardPreviewText");
 const cardPreviewHelp = document.getElementById("cardPreviewHelp");
 const cardPreviewWarning = document.getElementById("cardPreviewWarning");
 const closeCardPreviewButton = document.getElementById("closeCardPreviewButton");
+const reducedMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 let players = [];
 let currentDeck = null;
@@ -94,11 +98,11 @@ let currentCardIndex = 0;
 let selectedDeckId = null;
 let deckBeingEdited = null;
 let activeCardInput = null;
-let acceptedCards = 0;
-let rejectedCards = 0;
 let penaltyCardsDrawn = 0;
 let playerPickCounts = {};
 let isShowingPenaltyCard = false;
+let isCardTransitioning = false;
+let confettiTimer = null;
 let savedEditorState = null;
 let previewReturnButton = null;
 
@@ -171,6 +175,7 @@ backToMenuButton.addEventListener("click", function () {
 async function startDeck(deckId) {
     playerError.textContent = "";
 	deckError.textContent = "";
+	clearConfetti();
 
 	try {
 		currentDeck = await getDeckById(deckId);
@@ -192,8 +197,6 @@ async function startDeck(deckId) {
 
     currentDeck.cards = shuffleCards(currentDeck.cards);
     currentCardIndex = 0;
-	acceptedCards = 0;
-	rejectedCards = 0;
 	penaltyCardsDrawn = 0;
 	playerPickCounts = {};
 	isShowingPenaltyCard = false;
@@ -203,7 +206,10 @@ async function startDeck(deckId) {
 	gameSummaryScreen.style.display = "none";
     gameScreen.style.display = "flex";
 
+    cardText.classList.remove("penaltyCardActive");
     cardText.textContent = prepareCardText(currentDeck.cards[currentCardIndex]);
+    updateGameProgress(false);
+    updateRejectButtonVisibility();
 }
 
 restartGameButton.addEventListener("click", function () {
@@ -211,15 +217,24 @@ restartGameButton.addEventListener("click", function () {
 });
 
 acceptCardButton.addEventListener("click", function () {
+    if (isCardTransitioning) {
+        return;
+    }
+
     if (!isShowingPenaltyCard) {
-        acceptedCards++;
+        transitionAcceptedCard();
+        return;
     }
 
     showNextCard();
 });
 
 rejectCardButton.addEventListener("click", function () {
-    showPenaltyCard();
+    if (isCardTransitioning) {
+        return;
+    }
+
+    transitionRejectedCard();
 });
 
 menuButton.addEventListener("click", function () {
@@ -227,17 +242,17 @@ menuButton.addEventListener("click", function () {
     menuScreen.style.display = "flex";
 
     cardText.textContent = "";
+    gameProgress.textContent = "";
     currentDeck = null;
     currentCardIndex = 0;
 
-    acceptedCards = 0;
-    rejectedCards = 0;
     penaltyCardsDrawn = 0;
     playerPickCounts = {};
     isShowingPenaltyCard = false;
 });
 
 summaryMenuButton.addEventListener("click", function () {
+    clearConfetti();
     gameSummaryScreen.style.display = "none";
     menuScreen.style.display = "flex";
 
@@ -245,8 +260,6 @@ summaryMenuButton.addEventListener("click", function () {
     currentDeck = null;
     currentCardIndex = 0;
 
-    acceptedCards = 0;
-    rejectedCards = 0;
     penaltyCardsDrawn = 0;
     isShowingPenaltyCard = false;
 });
@@ -404,8 +417,9 @@ function resizeEditorTextareas() {
 }
 
 function showNextCard() {
-    rejectCardButton.style.display = "inline-block";
 	isShowingPenaltyCard = false;
+	cardText.classList.remove("penaltyCardActive");
+	updateRejectButtonVisibility();
 
 	currentCardIndex++;
 
@@ -419,20 +433,19 @@ function showNextCard() {
 
 	gameSummaryStats.replaceChildren();
 
-	const acceptedCardsText = document.createElement("p");
-	acceptedCardsText.textContent = "Godkjente kort: " + acceptedCards;
-	gameSummaryStats.appendChild(acceptedCardsText);
+	const completedCardsText = document.createElement("p");
+	completedCardsText.textContent =
+		"Dere har nå gått gjennom " + currentDeck.cards.length + " kort.";
+	gameSummaryStats.appendChild(completedCardsText);
 
 	const penaltyCardsText = document.createElement("p");
-	penaltyCardsText.textContent = "Straffekort trukket: " + penaltyCardsDrawn;
+	penaltyCardsText.textContent =
+		"Straffekort trukket i løpet av dette spillet: " + penaltyCardsDrawn;
 	gameSummaryStats.appendChild(penaltyCardsText);
 
-	const rejectedCardsText = document.createElement("p");
-	rejectedCardsText.textContent = "Avviste kort: " + rejectedCards;
-	gameSummaryStats.insertBefore(rejectedCardsText, penaltyCardsText);
-
 	const topPlayersTitle = document.createElement("h3");
-	topPlayersTitle.textContent = "Mest valgte spillere";
+	topPlayersTitle.textContent =
+		"Spillerne som dukket opp flest ganger i kortene!";
 	gameSummaryStats.appendChild(topPlayersTitle);
 
 	topPlayers.forEach(function(player, index) {
@@ -451,7 +464,8 @@ function showNextCard() {
 	});
 
 		gameScreen.style.display = "none";
-		gameSummaryScreen.style.display = "flex";
+		gameProgress.textContent = "";
+		showGameSummary();
 
 		return;
 	}
@@ -459,24 +473,199 @@ function showNextCard() {
     const nextCard = currentDeck.cards[currentCardIndex];
 
     cardText.textContent = prepareCardText(nextCard);
+    updateGameProgress(false);
+}
+
+function showGameSummary() {
+    gameSummaryContent.classList.remove("summaryEnter");
+    gameSummaryScreen.style.display = "flex";
+
+    if (prefersReducedMotion()) {
+        clearConfetti();
+        return;
+    }
+
+    void gameSummaryContent.offsetWidth;
+    gameSummaryContent.classList.add("summaryEnter");
+
+    gameSummaryContent.addEventListener("animationend", function handleSummaryAnimationEnd(event) {
+        if (event.target !== gameSummaryContent) {
+            return;
+        }
+
+        gameSummaryContent.classList.remove("summaryEnter");
+        gameSummaryContent.removeEventListener("animationend", handleSummaryAnimationEnd);
+    });
+
+    startConfetti();
+}
+
+function startConfetti() {
+    const colors = ["#3b82f6", "#22c55e", "#ef4444", "#facc15", "#a855f7"];
+
+    clearConfetti();
+
+    if (prefersReducedMotion()) {
+        return;
+    }
+
+    for (let index = 0; index < 180; index++) {
+        const piece = document.createElement("span");
+        const size = 6 + Math.random() * 7;
+
+        piece.classList.add("confettiPiece");
+        piece.style.left = Math.random() * 100 + "%";
+        piece.style.width = size + "px";
+        piece.style.height = size * 0.55 + "px";
+        piece.style.backgroundColor = colors[index % colors.length];
+        piece.style.setProperty("--confetti-delay", Math.random() * 6.2 + "s");
+        piece.style.setProperty("--confetti-duration", 2 + Math.random() * 1.1 + "s");
+        piece.style.setProperty("--confetti-drift", -70 + Math.random() * 140 + "px");
+        piece.style.setProperty("--confetti-rotation", 360 + Math.random() * 540 + "deg");
+        confettiLayer.appendChild(piece);
+    }
+
+    confettiTimer = setTimeout(clearConfetti, 9500);
+}
+
+function clearConfetti() {
+    if (confettiTimer !== null) {
+        clearTimeout(confettiTimer);
+        confettiTimer = null;
+    }
+
+    confettiLayer.replaceChildren();
+}
+
+function transitionAcceptedCard() {
+    if (prefersReducedMotion()) {
+        showNextCard();
+        return;
+    }
+
+    isCardTransitioning = true;
+    setGameControlsDisabled(true);
+
+    runCardAnimation("cardAcceptedExit", function () {
+        showNextCard();
+
+        if (gameScreen.style.display === "none") {
+            finishCardTransition();
+            return;
+        }
+
+        runCardAnimation("cardAcceptedEnter", finishCardTransition);
+    });
+}
+
+function transitionRejectedCard() {
+    if (!hasPenaltyCards()) {
+        return;
+    }
+
+    if (prefersReducedMotion()) {
+        showPenaltyCard();
+        return;
+    }
+
+    isCardTransitioning = true;
+    setGameControlsDisabled(true);
+
+    runCardAnimation("cardRejectedExit", function () {
+        showPenaltyCard();
+        runCardAnimation("cardPenaltyEnter", finishCardTransition);
+    });
+}
+
+function runCardAnimation(animationClass, onComplete) {
+    if (prefersReducedMotion()) {
+        onComplete();
+        return;
+    }
+
+    let animationCompleted = false;
+    let fallbackTimer;
+
+    function completeAnimation() {
+        if (animationCompleted) {
+            return;
+        }
+
+        animationCompleted = true;
+        clearTimeout(fallbackTimer);
+        cardText.removeEventListener("animationend", handleAnimationEnd);
+        cardText.classList.remove(animationClass);
+        onComplete();
+    }
+
+    function handleAnimationEnd(event) {
+        if (event.target === cardText) {
+            completeAnimation();
+        }
+    }
+
+    cardText.addEventListener("animationend", handleAnimationEnd);
+    cardText.classList.add(animationClass);
+    fallbackTimer = setTimeout(completeAnimation, 700);
+}
+
+function finishCardTransition() {
+    isCardTransitioning = false;
+    setGameControlsDisabled(false);
+}
+
+function setGameControlsDisabled(disabled) {
+    acceptCardButton.disabled = disabled;
+    rejectCardButton.disabled = disabled;
+    menuButton.disabled = disabled;
+}
+
+function prefersReducedMotion() {
+    return reducedMotionPreference.matches;
 }
 
 function showPenaltyCard() {
-    rejectCardButton.style.display = "none";
-	isShowingPenaltyCard = true;
-	rejectedCards++;
-
-    if (!currentDeck.penaltyCards || currentDeck.penaltyCards.length === 0) {
-        cardText.textContent = "Ingen straffekort er lagt inn i denne kortstokken.";
+    if (!hasPenaltyCards()) {
         return;
     }
+
+	isShowingPenaltyCard = true;
+	updateRejectButtonVisibility();
 
     penaltyCardsDrawn++;
 
     const randomIndex = Math.floor(Math.random() * currentDeck.penaltyCards.length);
     const penaltyCard = currentDeck.penaltyCards[randomIndex];
 
+    cardText.classList.add("penaltyCardActive");
     cardText.textContent = prepareCardText(penaltyCard);
+    updateGameProgress(true);
+}
+
+function hasPenaltyCards() {
+    return Boolean(
+        currentDeck &&
+        Array.isArray(currentDeck.penaltyCards) &&
+        currentDeck.penaltyCards.length > 0
+    );
+}
+
+function updateRejectButtonVisibility() {
+    rejectCardButton.style.display =
+        hasPenaltyCards() && !isShowingPenaltyCard ? "inline-block" : "none";
+}
+
+function updateGameProgress(isPenaltyCard) {
+    const cardNumber = currentCardIndex + 1;
+    const totalCards = currentDeck.cards.length;
+
+    if (isPenaltyCard && hasPenaltyCards()) {
+        gameProgress.textContent =
+            `Straffekort ${penaltyCardsDrawn} av ${currentDeck.penaltyCards.length}`;
+        return;
+    }
+
+    gameProgress.textContent = `Kort ${cardNumber} av ${totalCards}`;
 }
 
 function prepareCardText(cardText) {
